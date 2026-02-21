@@ -9,7 +9,7 @@ GGUIML is not a competitor to SDL, OpenGL, or other graphics APIs, but is instea
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
 NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
 "OPTIONAL" in this document are to be interpreted as described in
-[RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119)
+[RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
 - "User": Any entity interfacing with a program that presents information created by the designer.
 - "Designer": A programmer or utility creating GGUIML to be handled by a program.
