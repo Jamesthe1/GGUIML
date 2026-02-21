@@ -20,7 +20,7 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
 
 A text file for the language MUST start with `!GGUIML` and a newline afterward; and the file extension may be `.ggui` or `.guil`.
 
-The topmost element is the document. It MAY have no parent, but the implementation or program MUST document if it does have one.
+The topmost element is the document. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
 
 If a feature or element is unavailable in a given API, it MUST be discarded and SHOULD give a warning to the designer, but it SHOULD NOT stop the program. Custom elements MUST NOT be present. The strict palette of elements in the language ensures that one GUI file is compatible across multiple users.
 
@@ -132,7 +132,7 @@ The following element types and their arguments are as follows:
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This is OPTIONAL to the designer and defaults to `1`. `DYNAMIC` SHOULD allow infinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale MAY be omitted by the designer, and it MUST default to `DYNAMICxDYNAMIC`.
 	- `event`: The event to fire when interacted with, as a string. This is OPTIONAL to the designer and defaults to an empty string. See [event bus](#Event_bus) for more information.
-- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this MUST be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation MUST provide an error to the designer.
+- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation MUST provide an error to the designer.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` or raise an error to the designer.
 	- `offline-path`: The location of the image, only on the disk. This is OPTIONAL and defaults to an empty string, used as fallback for offline content.
 - `scroll-rect`: A region of a given size.
