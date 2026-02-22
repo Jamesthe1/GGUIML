@@ -97,7 +97,7 @@ The style argument is a string that refers to a style provided by the program. T
 
 The type of element is REQUIRED and MUST be any one of the following:
 
-- `window`
+- `window` (OPTIONAL to the program and may be replaced with a `scroll-rect`)
 - `table`
 - `label`
 - `textbox`
@@ -130,7 +130,7 @@ The following syntax is invalid:
 
 The following element types and their arguments are as follows:
 
-- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index.
+- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. It SHOULD provide scroll bars when the content is beyond the window boundaries.
 	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `on`, where it MUST default to an empty string.
 	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
 	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
@@ -295,5 +295,7 @@ However, this is valid, because modules and namespaces are not elements:
 ### Guidance
 
 All parser errors are intended to be visible to the designer. Therefore, a program SHOULD forward errors and warnings from the implementation if they pertain to the designer.
+
+Because this is a windowed system, a program MAY provide the user with a bar that contains minimized and present windows. A window SHOULD NOT be a required container for the designer.
 
 For any SHOULD NOT, a warning SHOULD be given to its intended recipient.
