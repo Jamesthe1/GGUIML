@@ -65,7 +65,7 @@ An implementation MUST use the following syntax for declaring an element:
 
 ```
 ## Tooltip text
-alignment(position) inner-alignment(inner-position) style scale type name appearance
+alignment(position) inner-alignment(inner-position) scale style type name appearance
 ```
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
@@ -89,9 +89,9 @@ The position MAY be defined, and MUST be written as `x,y,z` or `x,y`. Any numeri
 
 The inner alignment and position regard the starting offset of the inner contents, including the background of the element. This MUST follow the same alignment and position rules as above. When inferring this argument's context, the original alignment MUST be defined.
 
-The style argument is a string that refers to a style provided by the program. This is OPTIONAL to the designer and MUST default to `'default'`, or the parent's style if it is a child element.
-
 The scale MUST be written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This MUST NOT be omitted, unless otherwise stated. `INHERIT` MUST NOT be used.
+
+The style argument is a string that refers to a style provided by the program. This is OPTIONAL to the designer and MUST default to `'default'`, or the parent's style if it is a child element.
 
 The type of element is REQUIRED and MUST be any one of the following:
 
@@ -258,7 +258,7 @@ This is only valid if the module is at the root of the file. Module definitions,
 ```
 200x100 textbox 'input'
 	MODULE 'custom-background' style
-		@style 100%x100% rect
+		100%x100% @style rect
 IMPORT $custom-background		# Error caused by module not in scope
 ```
 
