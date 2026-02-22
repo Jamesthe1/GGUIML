@@ -32,7 +32,7 @@ A numeric MUST either be:
 
 A point MUST either be a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
-A string MUST either be surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences and MUST be interpreted as such, only if it is present in double-quotes.
+A string MUST either be surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences and MUST be interpreted as such, only if it is present in double-quotes. Strings may be accessed as an associative array with line index as the key, and all text on each line as the values. Empty lines MAY be omitted.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -51,7 +51,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#Inheritance_and_references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), `[` and `]`, `{` and `}`, `.`, `'` and `"`, `\`, and `:`.
+Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#Inheritance_and_references)), space (` `), and colon (`:`).
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
@@ -222,7 +222,16 @@ A variable or element reference can be expanded multiple times with curly bracke
 
 Variables will always resolve to strings in this manner, until the final reference has been acquired. A limit to multi-expansion MAY be defined by the implementation or program, and SHOULD be documented.
 
-All variable references are possible to resolve in double-quoted strings. An element reference will resolve into its name in a string.
+All variable references are possible to resolve in double-quoted strings. An element reference will resolve into its name in a string. If the variable has the possibility of resolving to an empty string, the following conditions are available:
+
+```
+@typearg.text?{.}{@line}
+@typearg.!{text}{@variable}
+```
+
+The `?{}` provides that anything inside the braces MUST only be present if the next variable can be resolved. `!{}` provides that anything inside the braces MUST only be present if the next variable cannot be resolved. The provided text MAY contain additional variables and conditions to expand into a string.
+
+If an invalid reference is used by the designer, a warning SHOULD be given.
 
 An implementation MUST resolve types for references. If an invalid type is given, an error MUST be given to the designer.
 
@@ -234,7 +243,7 @@ A designer MAY split their UI into multiple reusable elements. This is defined w
 MODULE module-name argument-names
 ```
 
-The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters. Argument names are space-separated, and can be accessed through reference syntax; their types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#Inheritance_and_references) for more information.
+The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters. Argument names are space-separated, MAY be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax; their types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#Inheritance_and_references) for more information.
 
 Modules MAY be placed as children to a `NAMESPACE` keyword with the following syntax:
 
@@ -254,7 +263,7 @@ IMPORT $namespace:$module-name
 IMPORT $nested.namespace:$module-name
 ```
 
-Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Likewise, references to variables and named elements cannot be accessed by `IMPORT`.
+When importing, any module arguments are to be placed after the module reference. Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Likewise, references to variables and named elements cannot be accessed by `IMPORT`.
 
 To import a module from another file, the `IMPORT` keyword MUST be used with the following syntax:
 
