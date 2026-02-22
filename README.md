@@ -123,9 +123,9 @@ Arguments can be separated with a newline and indented, to indicate they are sti
 
 The following syntax is invalid:
 ```
-400x200 textbox 'input'
-	100%x100% rect style='input_bg'		# Child presence implies the type arguments are empty.
-	TYPEARG empty-text='Add some words'	# This produces a syntax error, because it is not the first line.
+400x200 button 'play_button'
+	100x100 button style='play_icon'		# Child presence implies the type arguments are empty.
+	TYPEARG text='Play' event='start_music'	# This produces a syntax error, because it is not the first line.
 ```
 
 The following element types and their arguments are as follows:
@@ -149,9 +149,9 @@ The following element types and their arguments are as follows:
 	- `text`: The initial text that appears in the box, as a string. This is OPTIONAL to the designer and defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This is OPTIONAL to the designer and defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `text`: Text to be emplaced with the button.
+	- `text`: Text to be emplaced with the button. This is OPTIONAL to the designer and defaults to an empty string.
 	- `event`: The event to fire when interacted with, as a string. This is OPTIONAL to the designer and defaults to an empty string. See [event bus](#Event_bus) for more information.
-- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation MUST provide an error to the user.
+- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists.
 	- `offline-path`: The location of the image, only on the disk. This is OPTIONAL and defaults to an empty string, used as fallback for offline content.
 - `scroll-rect`: A region of a given size.
@@ -159,7 +159,7 @@ The following element types and their arguments are as follows:
 - `graph`: A display with given data points.
 	- `data`: An associative array of string keys, and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
 
-These arguments are intended to be explicit, instead of sequential. An implementation SHOULD NOT support context inferencing on type arguments.
+These arguments are intended to be explicit, instead of sequential. An implementation MUST NOT support context inferencing on type arguments.
 
 ### Element parenting
 
