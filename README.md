@@ -30,6 +30,8 @@ A numeric MUST either be:
 - Decimals, which MUST include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
+A point MUST either be a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
+
 A string MUST either be surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences and MUST be interpreted as such, only if it is present in double-quotes.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
@@ -49,7 +51,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#Inheritance_and_references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), and `:`.
+Special characters MUST NOT be used in any names that elements in the language may reference. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), `[` and `]`, `{` and `}`, `.`, `'` and `"`, `\`, and `:`.
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
@@ -65,7 +67,7 @@ An implementation MUST use the following syntax for declaring an element:
 
 ```
 ## Tooltip text
-alignment(position) inner-alignment(inner-position) scale style type name appearance
+alignment(position) inner-alignment(inner-position)[inner-padding] scale style type name appearance
 ```
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
@@ -85,9 +87,9 @@ The following alignments MUST be available:
 
 An alignment MUST be typed as `vertical-horizontal`. The alignment MUST default to `center-center` and MAY be omitted when no position is defined. Additionally, if one part of the alignment is defined, the other side of the alignment MAY be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
-The position MAY be defined, and MUST be written as `x,y,z` or `x,y`. Any numeric MUST be accepted, except on `z` which must be an integer, and defaults to pixels. Percentages MUST be interpreted as a percentage of the parent's width and height. The position MUST default to `0,0,DYNAMIC`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` MUST NOT be used. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
+The offset position MAY be defined, and MUST be written as a point. Any numeric MUST be accepted, except on `z` which must be an integer, and defaults to pixels. Percentages MUST be interpreted as a percentage of the given inner boundary. The position MUST default to `0,0,DYNAMIC`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` MUST NOT be used. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
-The inner alignment and position regard the starting offset of the inner contents, including the background of the element. This MUST follow the same alignment and position rules as above. When inferring this argument's context, the original alignment MUST be defined.
+The inner alignment and position regard the starting offset of the inner contents. This MUST follow the same alignment and position rules as above. Inner padding is OPTIONAL to the designer, and is represented as `[left, top, right, down]`; `DYNAMIC` MUST NOT be used and the default MUST be `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
 
 The scale MUST be written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This MUST NOT be omitted, unless otherwise stated. `INHERIT` MUST NOT be used.
 
@@ -117,7 +119,7 @@ The appearance argument is OPTIONAL to the designer and MUST be any one of the f
 
 Some pre-defined types come with additional variables that could be required. They MUST appear at least on the next line of the declaration, indented once more than the declaration, and begin with `typearg`. There MUST NOT be any other text between the declaration and the arguments.
 
-Arguments MAY be placed on the next line and further indented, to indicate they are still a part of `typearg`.
+Arguments MAY be separated with a newline and indented, to indicate they are still a part of `typearg`. Type arguments MUST NOT contain `INHERIT`.
 
 The following syntax is invalid:
 ```
@@ -138,7 +140,7 @@ The following element types and their arguments are as follows:
 	- `headerless`: Boolean for if this window has no header. This is OPTIONAL to the designer, and defaults to `off`.
 	- `borderless`: Boolean for if this window is borderless. This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
 - `table`: An element that contains items. Scale MAY be omitted by the designer, and it MUST default to `100%xDYNAMIC`.
-	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements.
+	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements. A warning MUST be given by the implementation if there are more children than the table's size allows, and additional children SHOULD be discarded.
 	- `borderless`: Boolean for if this table is borderless. This is OPTIONAL to the designer, implementation and program; and defaults to `off`.
 - `label`: An element that contains text. Scale MAY be omitted by the designer, and it MUST default to `DYNAMICxDYNAMIC`.
 	- `text`: Text of the label, as a string. This is OPTIONAL to the designer and defaults to an empty string.
@@ -155,7 +157,7 @@ The following element types and their arguments are as follows:
 - `scroll-rect`: A region of a given size.
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). Scroll bars MUST be placed accordingly if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars MUST be disabled.
 - `graph`: A display with given data points.
-	- `data`: An associative array of string keys and decimal values.
+	- `data`: An associative array of string keys, and numeric or point values. Numerics and numerics of points can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
 
 These arguments are intended to be explicit, instead of sequential. An implementation SHOULD NOT support context inferencing on type arguments.
 
@@ -185,20 +187,20 @@ References are applicable as arguments. See [inheritance and references](#Inheri
 
 ### Inheritance and references
 
-When using `INHERIT`, a reference MAY be given. This is identified by the special character `$`. Inheritance uses the following syntax:
+When using `INHERIT`, an element reference MAY be given. This is identified by the special character `$`. Inheritance uses the following syntax:
 
 ```
-INHERIT:$reference
+INHERIT:$element
 ```
 
-The colon MUST be omitted if there is no reference defined. The reference MUST default to the element's parent.
+The colon MUST be omitted if there is no reference defined, and MUST default to the element's parent.
 
 A variable, when referenced, MUST be with the following syntax:
 
 ```
 @variable-name
 @typearg.variable-name
-$reference:@variable-name
+$element:@variable-name
 ```
 
 `INHERIT` MUST NOT be used to prefix any variable references.
@@ -211,6 +213,14 @@ When referencing an item in an associative array, it MUST be retrieved with any 
 ```
 
 These entries will resolve to the variable `typearg`, its sub-variable `array`, and an entry with the key `key-name`, to reference the value at this location.
+
+A variable or element reference can be expanded multiple times with curly brackets (`{` and `}`). The following example will first resolve `@variable`, then the outer reference:
+
+```
+@typearg.{@variable}
+```
+
+Variables will always resolve to strings in this manner, until the final reference has been acquired. A limit to multi-expansion MAY be defined by the implementation or program, and SHOULD be documented.
 
 All variable references are possible to resolve in double-quoted strings. An element reference will resolve into its name in a string.
 
@@ -241,7 +251,7 @@ A module MUST NOT deploy any elements without an `IMPORT` declaration. To access
 ```
 IMPORT $module-name
 IMPORT $namespace:$module-name
-IMPORT $nested:$namespace:$module-name
+IMPORT $nested.namespace:$module-name
 ```
 
 Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Likewise, references to variables and named elements cannot be accessed by `IMPORT`.
