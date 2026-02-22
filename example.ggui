@@ -1,20 +1,21 @@
 !GGUIML
 # Presume our window is rectangular
 top-left top-left[1%, 1%, 1%, 1%] 70%x100% window 'data_window'
-	typearg
+	TYPEARG
 		header='Census'
 		closable=off
+		movable=off
 	50%xDYNAMIC table
-		typearg rows-columns=DYNAMICx2
+		TYPEARG rows-columns=DYNAMICx2
 		MODULE 'entry' entry_header internal_name?
 			label
-				typearg text=@entry_name
+				TYPEARG text=@entry_name
 			label
-				typearg text="$census-chart:@typearg.data.!{@entry_name}{@internal_name}"
+				TYPEARG text="$census-chart:@TYPEARG.data.!{@entry_name}{@internal_name}"
 		'header' label
-			typearg text='Continent'
+			TYPEARG text='Continent'
 		'header' label
-			typearg text='Populace'
+			TYPEARG text='Populace'
 		IMPORT $entry 'North America' 'AmericaNorth'
 		IMPORT $entry 'South America' 'AmericaSouth'
 		IMPORT $entry 'Europe'
@@ -23,12 +24,12 @@ top-left top-left[1%, 1%, 1%, 1%] 70%x100% window 'data_window'
 		IMPORT $entry 'Antarctica'
 		IMPORT $entry 'Oceania'
 	label 'census_summary'
-		typearg text='Our census estimate for this year shows many of our users are overseas. There are more users present in Oceania that we are serving to than North America. It may be wise to invest in legal representatives abroad as our organization reaches more people.'
+		TYPEARG text='Our census estimate for this year shows many of our users are overseas. There are more users present in Oceania that we are serving to than North America. It may be wise to invest in legal representatives abroad as our organization reaches more people.'
 top-right top[1%, 1%, 1%, 1%] 30%x100% window 'graph_window'
-	typearg header='Display'
+	TYPEARG header='Display' resizable=off
 	## A bar chart with several points to display the census.
 	80%x80% 'bar-chart' graph 'census-chart'
-		typearg
+		TYPEARG
 			data=
 				- 'AmericaNorth': 543
 				- 'AmericaSouth': 3641
