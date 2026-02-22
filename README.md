@@ -74,7 +74,7 @@ An alignment MUST be typed as `vertical-horizontal`. The alignment MUST default 
 
 The position MAY be defined, and MUST be written as `x,y,z` or `x,y`. Any numeric MUST be accepted, except on `z` which must be an integer, and defaults to pixels. Percentages MUST be interpreted as a percentage of the parent's width and height. The position MUST default to `0,0,DYNAMIC`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` MUST NOT be used. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
-The inner alignment and position regard the starting offset of the inner contents, including the background of the element. This MUST follow the same alignment and position rules as above.
+The inner alignment and position regard the starting offset of the inner contents, including the background of the element. This MUST follow the same alignment and position rules as above. When inferring this argument's context, the original alignment MUST be defined.
 
 The style argument is a string that refers to a style provided by the program. This is OPTIONAL to the designer and MUST default to `'default'`, or the parent's style if it is a child element.
 
