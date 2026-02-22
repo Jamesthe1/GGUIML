@@ -36,7 +36,16 @@ A boolean MUST either be `on` or `off`, representing `true` and `false` in the c
 
 A single-line comment MUST begin with a single hashtag/pound symbol (`#`), whereas tooltip text MUST begin with two (`##`). A multi-line comment MUST begin with `#(` and end with `)#`, and a multi-line tooltip text MUST begin with `##(` and end with `)##`.
 
-A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#Inheritance_and_references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error to the designer.
+An associative array MUST have a series of entries prefixed by an additional indentation, and a hyphen (`-`). They must begin with a key, followed by a colon (`:`), and then a value. The following syntax is valid:
+
+```
+items=
+	- 'cans': 5
+	- 'cups': 12
+	- 'bottles': 9
+```
+
+A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#Inheritance_and_references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error.
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#Inheritance_and_references) for more information.
 
@@ -90,6 +99,7 @@ The type of element is REQUIRED and MUST be any one of the following:
 - `image`
 - `rect`
 - `scroll-rect`
+- `graph`
 
 The name MUST be written as a string, MUST be unique to other elements in the file (otherwise an error must be raised), and MUST not contain `$` or `@` as this is reserved (see [inheritance and references](#Inheritance_and_references)). This MAY be omitted by the designer and MAY default to a random UUIDv4. The default naming method MUST be disclosed in the implementation. `INHERIT` MUST NOT be used.
 
@@ -101,7 +111,9 @@ The appearance argument is OPTIONAL to the designer and MUST be any one of the f
 
 ### Element type arguments
 
-Some pre-defined types come with additional variables that MAY be required. They MUST appear at least on the next line of the declaration, indented once more than the declaration, and begin with `typearg`. There MUST NOT be any other text between the declaration and the arguments.
+Some pre-defined types come with additional variables that could be required. They MUST appear at least on the next line of the declaration, indented once more than the declaration, and begin with `typearg`. There MUST NOT be any other text between the declaration and the arguments.
+
+Arguments MAY be placed on the next line and further indented, to indicate they are still a part of `typearg`.
 
 The following syntax is invalid:
 ```
@@ -137,6 +149,8 @@ The following element types and their arguments are as follows:
 	- `offline-path`: The location of the image, only on the disk. This is OPTIONAL and defaults to an empty string, used as fallback for offline content.
 - `scroll-rect`: A region of a given size.
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). Scroll bars MUST be placed accordingly if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars MUST be disabled.
+- `graph`: A display with given data points.
+	- `data`: An associative array of string keys and decimal values.
 
 ### Element parenting
 
@@ -172,7 +186,7 @@ INHERIT:$reference
 
 The colon MUST be omitted if there is no reference defined. The reference MUST default to the element's parent.
 
-A variable MAY be referenced, and it MUST be with the following syntax:
+A variable, when referenced, MUST be with the following syntax:
 
 ```
 @variable-name
@@ -181,6 +195,15 @@ $reference:@variable-name
 ```
 
 `INHERIT` MUST NOT be used to prefix any variable references.
+
+When referencing an item in an associative array, it MUST be retrieved with any of the following syntax:
+
+```
+@typearg.array.key-name
+@typearg.array[key-name]
+```
+
+These entries will resolve to the variable `typearg`, its sub-variable `array`, and an entry with the key `key-name`, to reference the value at this location.
 
 An implementation MUST resolve types for references. If an invalid type is given, an error MUST be given to the designer.
 
