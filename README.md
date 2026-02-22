@@ -20,7 +20,7 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
 
 A text file for the language MUST start with `!GGUIML` and a newline afterward; and the file extension may be `.ggui` or `.guil`.
 
-The topmost element is the document. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
+The topmost element is the container; this is the window of the application itself, or display, or module file depending on the program and its environment. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
 
 If a feature or element is unavailable in a given API, it MUST be discarded and SHOULD give a warning to the designer, but it SHOULD NOT stop the program. Custom elements MUST NOT be present. The strict palette of elements in the language ensures that one GUI file is compatible across multiple users.
 
@@ -30,7 +30,7 @@ A numeric MUST either be:
 - Decimals, which MUST include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
-A string MUST either be surrounded by single-quotes (`'`) or double-quotes (`"`). The escape character `\` conforms to ISO C escape sequences and MUST be interpreted as such, only if it is present in double-quotes.
+A string MUST either be surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences and MUST be interpreted as such, only if it is present in double-quotes.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -49,7 +49,11 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#Inheritance_and_references) for more information.
 
+Special characters MUST NOT be used in any names that elements in the language may reference. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), and `:`.
+
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
+
+The UI has the capacity to be split into modules. See [modular elements](#Modular_elements) for more information.
 
 The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
 
@@ -101,7 +105,7 @@ The type of element is REQUIRED and MUST be any one of the following:
 - `scroll-rect`
 - `graph`
 
-The name MUST be written as a string, MUST be unique to other elements in the file (otherwise an error must be raised), and MUST not contain `$` or `@` as this is reserved (see [inheritance and references](#Inheritance_and_references)). This MAY be omitted by the designer and MAY default to a random UUIDv4. The default naming method MUST be disclosed in the implementation. `INHERIT` MUST NOT be used.
+The name MUST be written as a string, MUST NOT contain whitespace or uppercase letters, MUST be unique to other elements in the file (otherwise an error must be raised), and MUST NOT contain special characters (see [interpretation](#Interpretation)). This MAY be omitted by the designer and MAY default to a random UUIDv4. The default naming method MUST be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` MUST NOT be used.
 
 The appearance argument is OPTIONAL to the designer and MUST be any one of the following:
 
@@ -143,6 +147,7 @@ The following element types and their arguments are as follows:
 	- `text`: The initial text that appears in the box, as a string. This is OPTIONAL to the designer and defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This is OPTIONAL to the designer and defaults to `1`. `DYNAMIC` SHOULD allow infinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale MAY be omitted by the designer, and it MUST default to `DYNAMICxDYNAMIC`.
+	- `text`: Text to be emplaced with the button.
 	- `event`: The event to fire when interacted with, as a string. This is OPTIONAL to the designer and defaults to an empty string. See [event bus](#Event_bus) for more information.
 - `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation MUST provide an error to the designer.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` or raise an error to the designer.
@@ -151,6 +156,8 @@ The following element types and their arguments are as follows:
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). Scroll bars MUST be placed accordingly if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars MUST be disabled.
 - `graph`: A display with given data points.
 	- `data`: An associative array of string keys and decimal values.
+
+These arguments are intended to be explicit, instead of sequential. An implementation SHOULD NOT support context inferencing on type arguments.
 
 ### Element parenting
 
@@ -205,7 +212,66 @@ When referencing an item in an associative array, it MUST be retrieved with any 
 
 These entries will resolve to the variable `typearg`, its sub-variable `array`, and an entry with the key `key-name`, to reference the value at this location.
 
+All variable references are possible to resolve in double-quoted strings. An element reference will resolve into its name in a string.
+
 An implementation MUST resolve types for references. If an invalid type is given, an error MUST be given to the designer.
+
+### Modular elements
+
+A designer MAY split their UI into multiple reusable elements. This is defined with the special `MODULE` keyword, and MAY be defined as a child of any element or in its own separate file. The syntax is as follows:
+
+```
+MODULE module-name argument-names
+```
+
+The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters. Argument names are space-separated, and can be accessed through reference syntax; their types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#Inheritance_and_references) for more information.
+
+Modules MAY be placed as children to a `NAMESPACE` keyword with the following syntax:
+
+```
+NAMESPACE namespace-name
+```
+
+The namespace name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters.
+
+Namespaces can be children of other namespaces, but MUST NOT be children of modules.
+
+A module MUST NOT deploy any elements without an `IMPORT` declaration. To access a module in the same file, the `IMPORT` keyword MUST be used with the following syntax:
+
+```
+IMPORT $module-name
+IMPORT $namespace:$module-name
+IMPORT $nested:$namespace:$module-name
+```
+
+Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Likewise, references to variables and named elements cannot be accessed by `IMPORT`.
+
+To import a module from another file, the `IMPORT` keyword MUST be used with the following syntax:
+
+```
+IMPORT $disk/path/to/file.ggui:$module-name	# Explicit inclusion
+IMPORT $disk/path/to/file.ggui				# Implicit inclusion; modules are treated as part of this scope
+```
+
+This is only valid if the module is at the root of the file. Module definitions, namespaces, and imports are scope-bound to their parent element. This means that this would be invalid:
+
+```
+200x100 textbox 'input'
+	MODULE 'custom-background' style
+		@style 100%x100% rect
+IMPORT $custom-background		# Error caused by module not in scope
+```
+
+However, this is valid, because modules and namespaces are not elements:
+
+```
+1024x768 window 'main_window'
+	NAMESPACE 'buttons'
+		MODULE 'large-button' name text event
+		400x200 button @name style='large_button'
+			typearg @text @event
+	IMPORT $buttons:$large-button 'play_button' 'PLAY' 'launch_game'
+```
 
 ### Guidance
 
