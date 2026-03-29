@@ -28,7 +28,7 @@ top-left top-left[1%, 1%, 1%, 1%] 70%x100% window 'data_window'
 top-right top[1%, 1%, 1%, 1%] 30%x100% window 'graph_window'
 	TYPEARG header='Display' resizable=off
 	## A bar chart with several points to display the census.
-	80%x80% 'bar-chart' graph 'census-chart'
+	80%xSQUARE 'bar-chart' graph 'census-chart'
 		TYPEARG
 			data=
 				- 'AmericaNorth': 543
@@ -38,3 +38,4 @@ top-right top[1%, 1%, 1%, 1%] 30%x100% window 'graph_window'
 				- 'Africa': 5957
 				- 'Antarctica': 0
 				- 'Oceania': 1263
+	

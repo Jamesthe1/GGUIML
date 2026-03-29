@@ -20,15 +20,20 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
 
 A text file for the language starts with `!GGUIML` and a newline afterward; and the file extension MAY be `.ggui` or `.guil`.
 
+The language is case-sensitive except for element names. If the implementation exposes an API, element names are RECOMMENDED to be lowercase. Uppercase file paths SHOULD throw a warning to the designer, as this may result in undesired behavior on case-sensitive file systems.
+
 The topmost element is the container; this is the window of the application itself, or display, or module file depending on the program and its environment. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
 
 If a feature or element is unavailable in a given API, it MUST be discarded and SHOULD give a warning to the designer, but it SHOULD NOT stop the program. Custom elements MUST NOT be present. The strict palette of elements in the language ensures that one GUI file is compatible across multiple implementations and programs.
 
 A numeric is either:
+
 - Integers which contain no suffix, also referred to as "pixels".
 - Percentages which MUST be suffixed with `%`, the number MAY include a decimal point.
 - Decimals, which MUST include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
+
+A scale is two numerics separated by a lowercase `x`, no spaces. A special keyword, `SQUARE`, may substitute either the first or second parameter to make the element have equal height and width.
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
@@ -47,15 +52,15 @@ items=
 	- 'bottles': 9
 ```
 
-A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#Inheritance_and_references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error.
+A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#inheritance_and_references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error.
 
-A variable reference MUST be an option for all variables. See [inheritance and references](#Inheritance_and_references) for more information.
+A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance_and_references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#Inheritance_and_references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#Inheritance_and_references)), space (` `), and colon (`:`).
+Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance_and_references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance_and_references)), space (` `), and colon (`:`).
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
-The UI has the capacity to be split into modules. See [modular elements](#Modular_elements) for more information.
+The UI has the capacity to be split into modules. See [modular elements](#modular_elements) for more information.
 
 The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
 
@@ -67,7 +72,7 @@ An implementation uses the following syntax for declaring an element:
 
 ```
 ## Tooltip text
-alignment(position) inner-alignment(inner-position)[inner-padding] scale style type name appearance
+alignment(position) inner-alignment(inner-position)[inner-padding] scale order style type name appearance
 ```
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
@@ -93,6 +98,11 @@ The inner alignment and position regard the starting offset of the inner content
 
 The scale is written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
+The order argument is OPTIONAL to the designer and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
+
+- `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
+- `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
+
 The style argument is a string that refers to a style provided by the program. This is OPTIONAL to the designer and defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
 The type of element is REQUIRED and can be any one of the following:
@@ -104,12 +114,13 @@ The type of element is REQUIRED and can be any one of the following:
 - `button`
 - `image`
 - `rect`
-- `scroll-rect`
 - `graph`
+- `list`
+- `break`
 
-The name is written as a string, MUST NOT contain special characters (see [interpretation](#Interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error must be raised). This is OPTIONAL to the designer and MAY default to a random UUIDv4. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
+The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This is OPTIONAL to the designer and MAY default to a random UUIDv4. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
 
-The appearance argument is OPTIONAL to the designer and can be any one of the following:
+The appearance argument is OPTIONAL to the designer and can be any one of the following, defaulting to `visible`:
 
 - `visible`: Presents its contents and allows interaction. This MUST NOT override the appearance of its children. This is the default.
 - `locked`: Presents its contents but MUST NOT allow any interaction for itself or any child.
@@ -140,7 +151,7 @@ The following element types and their arguments are as follows:
 	- `headerless`: Boolean for if this window has no header. This is OPTIONAL to the designer, and defaults to `off`.
 	- `borderless`: Boolean for if this window is borderless. This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
 - `table`: An element that contains items. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements. A warning MUST be given by the implementation if there are more children than the table's size allows, and additional children SHOULD be discarded.
+	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
 	- `borderless`: Boolean for if this table is borderless. This is OPTIONAL to the designer, implementation and program; and defaults to `off`.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `text`: Text of the label, as a string. This is OPTIONAL to the designer and defaults to an empty string.
@@ -154,10 +165,18 @@ The following element types and their arguments are as follows:
 - `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists.
 	- `offline-path`: The location of the image, only on the disk. This is OPTIONAL and defaults to an empty string, used as fallback for offline content.
-- `scroll-rect`: A region of a given size.
-	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). Scroll bars SHOULD be placed accordingly by the program if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled.
+- `rect`: A region of a given size. Scale defaults to the value of `inner-scale`. Overflowing contents MUST be cropped by the program.
+	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents).
+	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
 - `graph`: A display with given data points.
 	- `data`: An associative array of string keys, and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
+- `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table.
+	- `mode`: How the list is presented and interaction is determined. The following options are available and defaults to `INHERIT`:
+		- `ordered`: Numbers, letters, roman numerals, any as specified by the program and style.
+		- `unordered`: Bullet points, squares, any as specified by the program and style.
+		- `radio`: Multiple options, one selection. If a child radio is selected, it will also make its parent selected.
+		- `checkbox`: Multiple options, multiple selections. If a child checkbox is selected, it will also make its parent selected.
+	- `start-selected`: A boolean of whether or not this option starts selected. Only available for `radio` and `checkbox` lists, and the implementation SHOULD present a warning to the designer if multiple `radio` options have `start-selected` to `on`. A warning SHOULD be presented to the designer if this option is not applicable to the given mode.
 
 These arguments are intended to be explicit, instead of sequential. An implementation MUST NOT support context inferencing on type arguments.
 
@@ -171,6 +190,8 @@ An element can be declared as a child of another element, which MUST be placed b
 	450x150 table 'main_content'	# Child
 ```
 
+Depending on the element, some children may be organized differently or moved into individual containers. If multiple elements are intended to occupy one region, a `rect` may be used as a parent containing all of them.
+
 ### Event bus
 
 The event bus uses strings to define specific events, which MAY be called and defined by the program. If the string is empty, there SHOULD NOT be an event called in the event bus. The implementation MAY raise a warning if an event is called but has no listeners.
@@ -183,7 +204,7 @@ program_event(arg1, arg2)
 
 Whitespace between any name or syntax is OPTIONAL. If there are no arguments, the parentheses are OPTIONAL.
 
-References are applicable as arguments. See [inheritance and references](#Inheritance_and_references) for more information.
+References are applicable as arguments. See [inheritance and references](#inheritance_and_references) for more information.
 
 ### Inheritance and references
 
@@ -271,7 +292,7 @@ IMPORT $namespace:$module-name
 IMPORT $nested.namespace:$module-name
 ```
 
-To import a module from another file, the `IMPORT` keyword is used with the following syntax:
+To import a module from another file, the `IMPORT` keyword is used with the following syntax (extension is REQUIRED):
 
 ```
 IMPORT $disk/path/to/file.ggui:$module-name	# Explicit inclusion
