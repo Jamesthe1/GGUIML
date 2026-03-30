@@ -37,7 +37,7 @@ A scale is two numerics separated by a lowercase `x`, no spaces. A special keywo
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings can be accessed as an associative array with line index as the key, and all text on each line as the values (which MUST be a non-indexable string for the designer). Empty lines MAY be omitted.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count, but the returned string MUST NOT be indexable. Empty lines MAY be omitted.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
