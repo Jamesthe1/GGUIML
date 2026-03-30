@@ -170,8 +170,8 @@ The following element types and their arguments are as follows:
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists.
 	- `offline-path`: The location of the image, only on the disk. This defaults to an empty string, used as fallback for offline content.
 	- `alt-text`: Text for screen readers or when the image fails to load.
-- `rect`: A region of a given size. Scale defaults to the value of `inner-scale`. Overflowing contents MUST be cropped by the program.
-	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents).
+- `rect`: A region of a given size. Scale defaults to `DYNAMICxDYNAMIC` (fits around the size of its contents). Overflowing contents MUST be cropped by the program.
+	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). If `DYNAMIC` is specified on any axis of the rect's scale, `DYNAMIC` must also appear in the same axis on the inner scale; the inner scale's dynamic axis MAY be omitted along with the `x`, and the argument is interpreted as a single numeric, but a blank argument is not allowed.
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
 - `graph`: A display with given data points.
 	- `data`: An associative array of string keys, and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
