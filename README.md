@@ -111,7 +111,7 @@ The style argument is a string that refers to a style provided by the program. T
 
 The type of element is REQUIRED and can be any one of the following:
 
-- `window` (OPTIONAL to the program and may be replaced with a `rect` internally; thusly, arguments relating to this SHOULD be ignored)
+- `window` (OPTIONAL to the program and may be replaced with a `rect` internally; if done so, arguments relating to the window SHOULD be ignored)
 - `table`
 - `label`
 - `textbox`
