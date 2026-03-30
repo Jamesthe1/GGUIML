@@ -94,11 +94,11 @@ The following alignments are available:
 	- center
 	- right
 
-An alignment is typed as `vertical-horizontal`. The alignment defaults to `center-center` and can be omitted when no position is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
+An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
 The offset position can be defined, written as a point. Any numeric is accepted, except on `z` which MUST be an integer. Percentages are interpreted as a percentage of the given inner boundary. The position defaults to `(0,0,DYNAMIC)`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` is invalid. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
-The inner alignment and position regard the starting offset of the inner contents. This follows the same alignment and position rules as above. Inner padding is represented as `[left, top, right, down]`; all numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
+The inner alignment regards the alignment that will be inherited, and the position describes the base offset that other elements will start from. These follow the same definition rules as above. Inner padding is represented as `[left, top, right, down]`; all numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
 
 The scale is written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
