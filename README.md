@@ -37,7 +37,7 @@ A scale is two numerics separated by a lowercase `x`, no spaces. A special keywo
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language; it MUST be interpreted as such, only if it is present in double-quotes. Strings can be accessed as an associative array with line index as the key, and all text on each line as the values (which MUST be a non-indexable string for the designer). Empty lines MAY be omitted.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings can be accessed as an associative array with line index as the key, and all text on each line as the values (which MUST be a non-indexable string for the designer). Empty lines MAY be omitted.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -66,6 +66,10 @@ The implementation or program MAY include an option to "enforce offline content,
 
 Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines MUST be ignored.
 
+For any argument with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any argument that is excluded by the implementation, if permitted by this document, SHOULD be documented.
+
+Most text that is displayed supports a very basic form of Markdown: `**` for bold, `*` or `_` for emphasized/italic text, and `__` for underline. All characters presented must surround text to take effect.
+
 ### Element syntax
 
 An implementation uses the following syntax for declaring an element:
@@ -77,7 +81,7 @@ alignment(position) inner-alignment(inner-position)[inner-padding] scale order s
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
 
-Tooltip text MAY either appear as a tooltip OR at the bottom of the window. It is OPTIONAL to the designer and program. `INHERIT` MUST NOT be used.
+Tooltip text MAY either appear as a tooltip OR at the bottom of the window. The inner text is parsed as basic markdown. It is OPTIONAL to the designer and program. `INHERIT` is invalid.
 
 The following alignments are available:
 
@@ -94,20 +98,20 @@ An alignment is typed as `vertical-horizontal`. The alignment defaults to `cente
 
 The offset position can be defined, written as a point. Any numeric is accepted, except on `z` which MUST be an integer. Percentages are interpreted as a percentage of the given inner boundary. The position defaults to `(0,0,DYNAMIC)`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` is invalid. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
-The inner alignment and position regard the starting offset of the inner contents. This follows the same alignment and position rules as above. Inner padding is OPTIONAL to the designer, and is represented as `[left, top, right, down]`; all numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
+The inner alignment and position regard the starting offset of the inner contents. This follows the same alignment and position rules as above. Inner padding is represented as `[left, top, right, down]`; all numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
 
 The scale is written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
-The order argument is OPTIONAL to the designer and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
+The order argument can be any one of the following, defaulting to `horizontal` unless otherwise specified:
 
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
-The style argument is a string that refers to a style provided by the program. This is OPTIONAL to the designer and defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+The style argument is a string that refers to a style provided by the program. This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
 The type of element is REQUIRED and can be any one of the following:
 
-- `window` (OPTIONAL to the program and may be replaced with a `scroll-rect`)
+- `window` (OPTIONAL to the program and may be replaced with a `rect` internally; thusly, arguments relating to this SHOULD be ignored)
 - `table`
 - `label`
 - `textbox`
@@ -118,9 +122,9 @@ The type of element is REQUIRED and can be any one of the following:
 - `list`
 - `break`
 
-The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This is OPTIONAL to the designer and MAY default to a random UUIDv4. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
+The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This MAY default to a random UUIDv4, but is overall optional to the designer. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
 
-The appearance argument is OPTIONAL to the designer and can be any one of the following, defaulting to `visible`:
+The appearance argument can be any one of the following, defaulting to `visible`:
 
 - `visible`: Presents its contents and allows interaction. This MUST NOT override the appearance of its children. This is the default.
 - `locked`: Presents its contents but MUST NOT allow any interaction for itself or any child.
@@ -141,32 +145,33 @@ The following syntax is invalid:
 
 The following element types and their arguments are as follows:
 
-- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. The program SHOULD provide scroll bars when the content is beyond the window boundaries.
+- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. The program SHOULD treat the inner container as a `rect`, and inherit its type arguments.
 	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `on`, where it defaults to an empty string.
-	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
-	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
-	- `closable`: Boolean for whether or not the window can be closed. This is OPTIONAL to the designer and defaults to `on`.
-	- `resizeable`: Boolean for whether or not the window can be resized by the user adjusting its borders. This is OPTIONAL to the designer, implementation, and program; and defaults to `on`.
-	- `movable`: Boolean for whether or not the window can be moved by the user. This is OPTIONAL to the designer, implementation, and program; and defaults to `on`.
-	- `headerless`: Boolean for if this window has no header. This is OPTIONAL to the designer, and defaults to `off`.
-	- `borderless`: Boolean for if this window is borderless. This is OPTIONAL to the designer, implementation, and program; and defaults to `off`.
-- `table`: An element that contains items. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
+	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `off`.
+	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `off`.
+	- `closable`: Boolean for whether or not the window can be closed. This defaults to `on`.
+	- `resizeable`: Boolean for whether or not the window can be resized by the user adjusting its borders. This defaults to `on`, and the argument MAY be ignored by the program.
+	- `movable`: Boolean for whether or not the window can be moved by the user. This defaults to `on`, and the argument MAY be ignored by the program.
+	- `headerless`: Boolean for if this window has no header. This defaults to `off`.
+	- `borderless`: Boolean for if this window is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
+- `table`: An element that contains items. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`. Cells are filled in by the `order` of this element.
 	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
-	- `borderless`: Boolean for if this table is borderless. This is OPTIONAL to the designer, implementation and program; and defaults to `off`.
+	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `text`: Text of the label, as a string. This is OPTIONAL to the designer and defaults to an empty string.
+	- `text`: Text of the label, as a string. This defaults to an empty string.
 - `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`.
-	- `empty-text`: Text that appears when the box is empty, as a string. This is OPTIONAL to the designer and defaults to an empty string.
-	- `text`: The initial text that appears in the box, as a string. This is OPTIONAL to the designer and defaults to an empty string.
-	- `max-lines`: The maximum number of lines a user may add, only as an integer. This is OPTIONAL to the designer and defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
+	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
+	- `text`: The initial text that appears in the box, as a string. This defaults to an empty string.
+	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `text`: Text to be emplaced with the button. This is OPTIONAL to the designer and defaults to an empty string.
-	- `event`: The event to fire when interacted with, as a string. This is OPTIONAL to the designer and defaults to an empty string. See [event bus](#Event_bus) for more information.
-- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
+	- `text`: Text to be emplaced with the button. This defaults to an empty string.
+	- `event`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
+- `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, or images are not supported by the program, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists.
-	- `offline-path`: The location of the image, only on the disk. This is OPTIONAL and defaults to an empty string, used as fallback for offline content.
+	- `offline-path`: The location of the image, only on the disk. This defaults to an empty string, used as fallback for offline content.
+	- `alt-text`: Text for screen readers or when the image fails to load.
 - `rect`: A region of a given size. Scale defaults to the value of `inner-scale`. Overflowing contents MUST be cropped by the program.
-	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. This is OPTIONAL, and defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents).
+	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents).
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
 - `graph`: A display with given data points.
 	- `data`: An associative array of string keys, and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
@@ -177,6 +182,7 @@ The following element types and their arguments are as follows:
 		- `radio`: Multiple options, one selection. If a child radio is selected, it will also make its parent selected.
 		- `checkbox`: Multiple options, multiple selections. If a child checkbox is selected, it will also make its parent selected.
 	- `start-selected`: A boolean of whether or not this option starts selected. Only available for `radio` and `checkbox` lists, and the implementation SHOULD present a warning to the designer if multiple `radio` options have `start-selected` to `on`. A warning SHOULD be presented to the designer if this option is not applicable to the given mode.
+- `break`: An intentional break in the ordering of elements. This forces sorted items after this element to move across to the next available row/column. It MAY be presented with a horizontal rule by the program, or an explicit element representing the rule can be added by the designer; each approach is valid depending on one's use case.
 
 These arguments are intended to be explicit, instead of sequential. An implementation MUST NOT support context inferencing on type arguments.
 
@@ -202,7 +208,7 @@ An event can contain arguments through the following syntax:
 program_event(arg1, arg2)
 ```
 
-Whitespace between any name or syntax is OPTIONAL. If there are no arguments, the parentheses are OPTIONAL.
+Whitespace between any name or syntax is OPTIONAL. If there are no arguments, the parentheses MAY be excluded.
 
 References are applicable as arguments. See [inheritance and references](#inheritance_and_references) for more information.
 
@@ -272,7 +278,7 @@ A designer can split their UI into multiple reusable elements. This is defined w
 MODULE module-name argument-names
 ```
 
-The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters. Argument names are space-separated, MAY be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax. Argument types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#Inheritance_and_references) for more information.
+The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters. Argument names are space-separated, MAY be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax. Argument types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#inheritance_and_references) for more information.
 
 Modules can be placed as children to a `NAMESPACE` keyword with the following syntax:
 
@@ -291,6 +297,8 @@ IMPORT $module-name
 IMPORT $namespace:$module-name
 IMPORT $nested.namespace:$module-name
 ```
+
+Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, variable references that match names will automatically fill that argument, and named arguments are allowed.
 
 To import a module from another file, the `IMPORT` keyword is used with the following syntax (extension is REQUIRED):
 
