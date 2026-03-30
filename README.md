@@ -56,7 +56,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance-and-references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); ':' and ';'), and space (` `).
+Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), and space (` `).
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
