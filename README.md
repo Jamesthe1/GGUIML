@@ -29,15 +29,15 @@ If a feature or element is unavailable in a given API, it MUST be discarded and 
 A numeric is either:
 
 - Integers which contain no suffix, also referred to as "pixels".
-- Percentages which MUST be suffixed with `%`, the number MAY include a decimal point.
-- Decimals, which MUST include a decimal point.
+- Percentages which are suffixed with `%`, and the designer can include a decimal point.
+- Decimals, which include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
 A scale is two numerics separated by a lowercase `x`, no spaces. A special keyword, `SQUARE`, may substitute either the first or second parameter to make the element have equal height and width.
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. Empty lines MAY be omitted.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
