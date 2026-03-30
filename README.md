@@ -155,7 +155,7 @@ The following element types and their arguments are as follows:
 	- `headerless`: Boolean for if this window has no header. This defaults to `off`.
 	- `borderless`: Boolean for if this window is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `table`: An element that contains items. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`. Cells are filled in by the `order` of this element.
-	- `rows-columns`: Number of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, can use `DYNAMIC` only on one axis to allow for more elements. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
+	- `rows-columns`: A scale of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, and `DYNAMIC` can be used on any axis; a `break` element is suggested if both axes are dynamic. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
 	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `text`: Text of the label, as a string. This defaults to an empty string.
