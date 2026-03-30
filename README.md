@@ -145,7 +145,7 @@ The following syntax is invalid:
 
 The following element types and their arguments are as follows:
 
-- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. The program SHOULD treat the inner container as a `rect`, and inherit its type arguments.
+- `window`: A panel that contains various contents. Can be a child restricted to the bounds of its parent. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type arguments as well.
 	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `on`, where it defaults to an empty string.
 	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `off`.
 	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `off`.
