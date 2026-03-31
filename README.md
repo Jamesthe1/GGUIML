@@ -37,7 +37,7 @@ A scale is two numerics separated by a lowercase `x`, no spaces. A special keywo
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences, and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -107,7 +107,7 @@ The order argument can be any one of the following, defaulting to `horizontal` u
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
-The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed, and special characters are not allowed for a valid style name even when escaped (see [Interpretation](#interpretation)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [Interpretation](#interpretation)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
 The type of element is REQUIRED and can be any one of the following:
 
@@ -206,7 +206,7 @@ An event can contain arguments through the following syntax:
 program_event(arg1, arg2)
 ```
 
-Whitespace between any name or syntax is OPTIONAL. If there are no arguments, the parentheses MAY be excluded.
+Whitespace, except for newlines, between any name or syntax is OPTIONAL. If there are no arguments, the parentheses MAY be excluded.
 
 References are applicable as arguments. See [inheritance and references](#inheritance-and-references) for more information.
 
