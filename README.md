@@ -126,9 +126,9 @@ The name is written as a string, MUST NOT contain special characters (see [inter
 
 The appearance argument can be any one of the following, defaulting to `visible`:
 
-- `visible`: Presents its contents and allows interaction. This MUST NOT override the appearance of its children. This is the default.
-- `locked`: Presents its contents but MUST NOT allow any interaction for itself or any child.
-- `invisible`: Does not present any of its contents nor allow any interaction, and MUST NOT capture any input.
+- `visible`: Presents its contents/children and allows interaction. This MUST NOT override the appearance of its children. This is the default.
+- `locked`: Presents its contents/children but MUST NOT allow any interaction for itself or any child.
+- `invisible`: Does not present any of its contents/children nor allow any interaction, and MUST NOT capture any input.
 
 ### Element type arguments
 
