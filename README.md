@@ -107,7 +107,7 @@ The order argument can be any one of the following, defaulting to `horizontal` u
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
-The style argument is a string that refers to a style provided by the program. This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed, and special characters are not allowed for a valid style name even when escaped (see [Interpretation](#interpretation)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
 The type of element is REQUIRED and can be any one of the following:
 
@@ -223,9 +223,9 @@ The colon MUST be omitted if there is no reference defined, and defaults to the 
 A variable can be referenced with the following syntax:
 
 ```
-@variable-name
-@TYPEARG.variable-name
-$element:@variable-name
+@variable-name				# Relative reference to parent element's arguments (or module arguments, which take priority over relative references)
+@TYPEARG.variable-name		# Relative reference to parent element's type argument
+$element:@variable-name		# Explicit reference to an element's argument
 ```
 
 `INHERIT` is invalid to the declaration of any variable references.
@@ -266,6 +266,15 @@ The `?{}` provides that anything inside the braces is only present if the next v
 
 If an invalid reference is used by the designer, a warning SHOULD be given.
 
+Any cyclic references MUST throw an error. A cyclic reference is any reference that eventually loops onto itself, creating an infinite loop of resolution. The following would be an example of a cyclic reference:
+
+```
+label 'label-one'
+	TYPEARG text=$label-two:@TYPEARG.text
+label 'label-two'
+	TYPEARG text=$label-one:@TYPEARG.text
+```
+
 An implementation MUST resolve types for references. If an invalid type is given, an error MUST be given to the designer.
 
 ### Modular elements
@@ -276,7 +285,7 @@ A designer can split their UI into multiple reusable elements. This is defined w
 MODULE module-name argument-names
 ```
 
-The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters. Argument names are space-separated, MAY be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax. Argument types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. See [inheritance and references](#inheritance-and-references) for more information.
+The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters. Argument names are space-separated, can be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax. Argument types are inferred by where they are placed, and will find a matching variable name if placed alone; otherwise, it is assumed to be the first-available argument when under inferred context. Arguments from modules override relative references. See [inheritance and references](#inheritance-and-references) for more information.
 
 Modules can be placed as children to a `NAMESPACE` keyword with the following syntax:
 
@@ -333,7 +342,7 @@ References and inheritance in modules MUST be resolved before they are implement
 TEMPLATE template-name argument-names
 ```
 
-This behaves similarly to `MODULE` and may be imported the same way. The only difference is that references and inheritance are resolved after the template has been inserted.
+This behaves similarly to `MODULE` and may be imported the same way. The only difference is that relative variable references and inheritance are resolved after the template has been inserted.
 
 ### Guidance
 
