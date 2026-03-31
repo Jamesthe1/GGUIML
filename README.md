@@ -172,7 +172,7 @@ The following element types and their arguments are as follows:
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). If `DYNAMIC` is specified on any axis of the rect's scale, `DYNAMIC` must also appear in the same axis on the inner scale; the inner scale's dynamic axis MAY be omitted along with the `x`, and the argument is interpreted as a single numeric, but a blank argument is not allowed.
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
 - `graph`: A display with given data points.
-	- `data`: An associative array of string keys, and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot. `INHERIT` is invalid.
+	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot. `INHERIT` is invalid.
 - `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table.
 	- `mode`: How the list is presented and interaction is determined. The following options are available and defaults to `INHERIT`:
 		- `ordered`: Numbers, letters, roman numerals, any as specified by the program and style.
