@@ -158,10 +158,9 @@ The following element types and their arguments are as follows:
 	- `rows-columns`: A scale of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, and `DYNAMIC` can be used on any axis; a `break` element is suggested if both axes are dynamic. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
 	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `text`: Text of the label, as a string. This defaults to an empty string.
-- `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`.
-	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
-	- `text`: The initial text that appears in the box, as a string. This defaults to an empty string.
+	- `text`: Text of the label, as a string. This defaults to an empty string. `INHERIT` is invalid.
+- `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type arguments as well.
+	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string. `INHERIT` is invalid.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `event`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
