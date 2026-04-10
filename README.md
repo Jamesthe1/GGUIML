@@ -121,6 +121,7 @@ The type of element is REQUIRED and can be any one of the following:
 - `graph`
 - `list`
 - `break`
+- `progress`
 
 The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This MAY default to a random UUIDv4, but is overall optional to the designer. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
 
@@ -140,7 +141,7 @@ The following syntax is invalid:
 ```
 400x200 button 'play_button'
 	100x100 button style='play_icon'		# Child presence implies the type arguments are empty.
-	TYPEARG text='Play' event='start_music'	# This produces a syntax error, because it is not the first line.
+	TYPEARG event='start_music'	# This produces a syntax error, because it is not the first line.
 ```
 
 The following element types and their arguments are as follows:
@@ -158,29 +159,31 @@ The following element types and their arguments are as follows:
 	- `rows-columns`: A scale of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, and `DYNAMIC` can be used on any axis; a `break` element is suggested if both axes are dynamic. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
 	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `text`: Text of the label, as a string. This defaults to an empty string. `INHERIT` is invalid.
+	- `text`: Text of the label, as a string. This defaults to an empty string.
 - `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type arguments as well.
-	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string. `INHERIT` is invalid.
+	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `event`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
 - `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, or images are not supported by the program, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists. Newlines are invalid.
 	- `offline-path`: The location of the image, only on the disk. This defaults to an empty string, used as fallback for offline content. Newlines are invalid.
-	- `alt-text`: Text for screen readers or when the image fails to load. This is REQUIRED for the designer. `INHERIT` is invalid.
+	- `alt-text`: Text for screen readers or when the image fails to load. This is REQUIRED for the designer.
 - `rect`: A region of a given size. Scale defaults to `DYNAMICxDYNAMIC` (fits around the size of its contents). Overflowing contents MUST be cropped by the program.
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). If `DYNAMIC` is specified on any axis of the rect's scale, `DYNAMIC` must also appear in the same axis on the inner scale; the inner scale's dynamic axis MAY be omitted along with the `x`, and the argument is interpreted as a single numeric, but a blank argument is not allowed.
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
-- `graph`: A display with given data points.
-	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot. `INHERIT` is invalid.
+- `graph`: A display with given data points, displayed as determined by the program style.
+	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
 - `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table.
 	- `mode`: How the list is presented and interaction is determined. The following options are available and defaults to `INHERIT`:
 		- `ordered`: Numbers, letters, roman numerals, any as specified by the program and style.
 		- `unordered`: Bullet points, squares, any as specified by the program and style.
 		- `radio`: Multiple options, one selection. If a child radio is selected, it will also make its parent selected.
 		- `checkbox`: Multiple options, multiple selections. If a child checkbox is selected, it will also make its parent selected.
-	- `start-selected`: A boolean of whether or not this option starts selected. Only available for `radio` and `checkbox` lists, and the implementation SHOULD present a warning to the designer if multiple `radio` options have `start-selected` to `on`. A warning SHOULD be presented to the designer if this option is not applicable to the given mode. `INHERIT` is invalid.
+	- `start-selected`: A boolean of whether or not this option starts selected. Only available for `radio` and `checkbox` lists, and the implementation SHOULD present a warning to the designer if multiple `radio` options have `start-selected` to `on`. A warning SHOULD be presented to the designer if this option is not applicable to the given mode.
 - `break`: An intentional break in the ordering of elements. This forces sorted items after this element to move across to the next available row/column. It MAY be presented with a horizontal rule by the program, or an explicit element representing the rule can be added by the designer; each approach is valid depending on one's use case.
+- `progress`: A progress bar that fills in a direction given by the program style.
+	- `value`: The value, as a percent.
 
 These arguments are intended to be explicit, instead of sequential. An implementation MUST NOT support context inferencing on type arguments.
 
