@@ -41,7 +41,7 @@ A string is either surrounded by single-quotes (`'`) which refer to un-parsed te
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
-A single-line comment begins with a single hashtag/pound symbol (`#`), whereas tooltip text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line tooltip text begins with `##(` and ends with `)##`.
+A single-line comment begins with a single hashtag/pound symbol (`#`), whereas tooltip text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line tooltip text begins with `##(` and ends with `)##`. Single-line comments and tooltips may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
 
 An associative array has a series of entries prefixed by an additional indentation, and a hyphen (`-`). They begin with a key, followed by a colon (`:`), and then a value. The following syntax is valid:
 
@@ -81,7 +81,7 @@ alignment(position) inner-alignment(inner-position)[inner-padding] scale order s
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
 
-Tooltip text MAY either appear as a tooltip OR at the bottom of the window. The inner text is parsed as basic markdown. It is OPTIONAL to the designer and program. `INHERIT` is invalid.
+Tooltip text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within tooltip text. `INHERIT` is invalid.
 
 The following alignments are available:
 
