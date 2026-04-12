@@ -76,7 +76,7 @@ An implementation uses the following syntax for declaring an element:
 
 ```
 ## Tooltip text
-alignment(position) inner-alignment(inner-position)[inner-padding] scale order style type name appearance
+alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
 ```
 
 All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
@@ -96,9 +96,11 @@ The following alignments are available:
 
 An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
+The margin describes the spacing away from surrounding elements, and is represented as `[top, right, down, left]`. All numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`.
+
 The offset position can be defined, written as a point. Any numeric is accepted, except on `z` which MUST be an integer. Percentages are interpreted as a percentage of the given inner boundary. The position defaults to `(0,0,DYNAMIC)`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` is invalid. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
-The inner alignment regards the alignment that will be inherited, and the position describes the base offset that other elements will start from. These follow the same definition rules as above. Inner padding is represented as `[left, top, right, down]`; all numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`. When inferring this argument's context, the original alignment MUST be defined.
+The inner alignment regards the alignment that will be inherited, the padding describes the inner spacing away from the boundaries and is typed similarly to margin, and the position describes the base offset that other elements will start from. These follow the same definition rules as above. When inferring this argument's context, the original alignment MUST be defined.
 
 The scale is written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
@@ -108,6 +110,12 @@ The order argument can be any one of the following, defaulting to `horizontal` u
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
 The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [Interpretation](#interpretation)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+
+The appearance argument can be any one of the following, defaulting to `visible`:
+
+- `visible`: Presents its contents/children and allows interaction. This MUST NOT override the appearance of its children. This is the default.
+- `locked`: Presents its contents/children but MUST NOT allow any interaction for itself or any child.
+- `invisible`: Does not present any of its contents/children nor allow any interaction, and MUST NOT capture any input.
 
 The type of element is REQUIRED and can be any one of the following:
 
@@ -124,12 +132,6 @@ The type of element is REQUIRED and can be any one of the following:
 - `progress`
 
 The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This MAY default to a random UUIDv4, but is overall optional to the designer. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
-
-The appearance argument can be any one of the following, defaulting to `visible`:
-
-- `visible`: Presents its contents/children and allows interaction. This MUST NOT override the appearance of its children. This is the default.
-- `locked`: Presents its contents/children but MUST NOT allow any interaction for itself or any child.
-- `invisible`: Does not present any of its contents/children nor allow any interaction, and MUST NOT capture any input.
 
 ### Element type arguments
 
