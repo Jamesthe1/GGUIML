@@ -33,15 +33,17 @@ A numeric is either:
 - Decimals, which include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
-A scale is two numerics separated by a lowercase `x`, no spaces. A special keyword, `SQUARE`, may substitute either the first or second parameter to make the element have equal height and width.
+A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second parameter to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then an integer.
 
-A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable.
+A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed.
+
+A rect is an array of four numerics, written as `[top, right, down, left]`.
 
 A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
-A single-line comment begins with a single hashtag/pound symbol (`#`), whereas tooltip text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line tooltip text begins with `##(` and ends with `)##`. Single-line comments and tooltips may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
+A single-line comment begins with a single hashtag/pound symbol (`#`), whereas hint text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line hint text begins with `##(` and ends with `)##`. Single-line comments and hints may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
 
 An associative array has a series of entries prefixed by an additional indentation, and a hyphen (`-`). They begin with a key, followed by a colon (`:`), and then a value. The following syntax is valid:
 
@@ -56,7 +58,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance-and-references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), and space (` `).
+Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), asterisk (`*`), and space (` `).
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
@@ -64,7 +66,7 @@ The UI has the capacity to be split into modules. See [modular elements](#modula
 
 The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
 
-Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines MUST be ignored.
+Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines are ignored.
 
 For any argument with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any argument that is excluded by the implementation, if permitted by this document, SHOULD be documented.
 
@@ -75,13 +77,13 @@ Most text that is displayed supports a very basic form of Markdown: `**` for bol
 An implementation uses the following syntax for declaring an element:
 
 ```
-## Tooltip text
+## Hint text
 alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
 ```
 
-All arguments, except for tooltip text, MAY be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context.
+All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context. Double assignment of an argument MUST present a warning.
 
-Tooltip text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within tooltip text. `INHERIT` is invalid.
+Hint text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within hint text. `INHERIT` is invalid.
 
 The following alignments are available:
 
@@ -94,17 +96,17 @@ The following alignments are available:
 	- center
 	- right
 
-An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
+An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position or margin/padding is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
-The margin describes the spacing away from surrounding elements, and is represented as `[top, right, down, left]`. All numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`.
+The margin describes the spacing away from surrounding elements, and is represented as a rect. All numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`.
 
 The offset position can be defined, written as a point. Any numeric is accepted, except on `z` which MUST be an integer. Percentages are interpreted as a percentage of the given inner boundary. The position defaults to `(0,0,DYNAMIC)`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` is invalid. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
 The inner alignment regards the alignment that will be inherited, the padding describes the inner spacing away from the boundaries and is typed similarly to margin, and the position describes the base offset that other elements will start from. These follow the same definition rules as above. When inferring this argument's context, the original alignment MUST be defined.
 
-The scale is written as `WIDTHxHEIGHT`, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
+The scale is written as a scale, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
-The order argument can be any one of the following, defaulting to `horizontal` unless otherwise specified:
+The order argument is the sort order of the element's contents, and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
 
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
@@ -250,7 +252,7 @@ A variable or element reference can be expanded multiple times with curly bracke
 @TYPEARG.{@variable}
 ```
 
-Variables will always resolve to strings in this manner, until the final reference has been acquired. A limit to multi-expansion is RECOMMENDED to be defined by the implementation or program, and SHOULD be documented.
+Variables will always resolve to strings in this manner, until the final reference has been acquired. Attempting to resolve a variable or element name with a special character is not allowed. A limit to multi-expansion is RECOMMENDED to be defined by the implementation or program, and SHOULD be documented.
 
 All variable references are possible to resolve in parsed strings. An element reference will resolve into its name in a parsed string. A variable may be further encased in curly brackets to better indicate inline parsing:
 
