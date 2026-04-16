@@ -28,7 +28,7 @@ If a feature or element is unavailable in a given API, it MUST be discarded and 
 
 A numeric is either:
 
-- Integers which contain no suffix, also referred to as "pixels".
+- Integers which contain no suffix, also referred to as "pixels."
 - Percentages which are suffixed with `%`, and the designer can include a decimal point.
 - Decimals, which include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
@@ -164,6 +164,7 @@ The following element types and their arguments are as follows:
 	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `text`: Text of the label, as a string. This defaults to an empty string.
+	- `font-size`: The size of the font. Integers and decimals are treated as font points, and defaults to the style's font size. The actual font MUST be defined in the style.
 - `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type arguments as well.
 	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
