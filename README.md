@@ -39,7 +39,7 @@ A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dep
 
 A rect is an array of four numerics, written as `[top, right, down, left]`.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and escapes special characters in this language, only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
