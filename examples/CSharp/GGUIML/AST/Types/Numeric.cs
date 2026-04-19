@@ -48,6 +48,8 @@ namespace GGUIML.AST.Types {
             set => Value = (byte)value;
         }
 
+        public int AssociatedValue { get; set; }
+
         public static readonly NumericFlag Dynamic = new NumericFlag { Value = (byte)Flag.DYNAMIC };
     }
 }
