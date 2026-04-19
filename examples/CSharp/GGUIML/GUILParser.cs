@@ -163,26 +163,20 @@ namespace GGUIML {
                     warnings.Add (new ParserWarning ("Element still exists while creating a new one, this is probably the sign of an error with the parser", state.lineNumber));
 
                 if (args[0] == "MODULE" || args[0] == "TEMPLATE") {
-                    state.currentNode = new RawModule {
-                        template = args[0] == "TEMPLATE",
-                        lineNumber = state.lineNumber,
-                        indentation = state.indent
-                    };
-                }
-                else {
-                    state.currentNode = new RawElement {
-                        hintText = state.storedHintText,
-                        lineNumber = state.lineNumber,
-                        indentation = state.indent
-                    };
+                    HandleModules (args, ref state);
+                    continue;
                 }
 
+                state.currentNode = new RawElement {
+                    hintText = state.storedHintText,
+                    lineNumber = state.lineNumber,
+                    indentation = state.indent
+                };
                 if (state.currentSequence.Count > 0)
                     state.currentSequence.Last ().children.Add (state.currentNode);
                 else
                     state.rawTree.Add (state.currentNode);
                 state.storedHintText = "";  // Clearing out hint text for the next iteration
-                state.RefreshArgumentQueue ();
 
                 List<string> inferredArgs = new List<string> ();
                 args.ForEachIter ((arg, argPos) => {
@@ -214,6 +208,7 @@ namespace GGUIML {
                     state.currentNode.baseArgs.Add (rawArgument);
                 });
                 // Inferred arguments are examined separately because of named arguments taking inference
+                state.RefreshArgumentQueue ();
                 inferredArgs.ForEachIter ((arg, argPos) => {
                     string argName = GetArgumentName (arg, ref state);   // This will throw an exception if no matching argument is found
                     IRawArgument rawArgument = new RawValue {
@@ -284,7 +279,8 @@ namespace GGUIML {
                     throw new GUILParseException ("Type arguments declared but no element of which to give them to, check indentation", state.lineNumber);
                 if (state.indent <= state.currentNode.indentation)   // We might not actually reach a case where indentation is *less* than our element, but better safe than sorry
                     throw new GUILParseException ("Type arguments have incorrect indentation", state.lineNumber);
-                // TODO: Throw exception if parent is a module/template
+                if (state.currentNode is RawElement == false)
+                    throw new GUILParseException ("Type arguments cannot be declared on modules or templates", state.lineNumber);
                 
                 state.interpMode = ParserState.InterpMode.Typearg;
             }
@@ -294,6 +290,23 @@ namespace GGUIML {
                 return;
             }
             // TODO: Parse named arguments
+        }
+
+        private void HandleModules (string[] args, ref ParserState state) {
+            state.currentNode = new RawModule {
+                template = args[0] == "TEMPLATE",
+                lineNumber = state.lineNumber,
+                indentation = state.indent
+            };
+
+            int lineNum = state.lineNumber;
+
+            args.Skip (1).ForEachIter ((s, i) => new RawValue {
+                Name = s,
+                Data = null,
+                LineNumber = lineNum,
+                Position = i
+            });
         }
 
         private string ExtractHintText (ref string lineState, ref ParserState state) {
@@ -369,7 +382,6 @@ namespace GGUIML {
             throw new GUILParseException ($"No valid inference could be found for argument: {arg}", state.lineNumber);
         }
 
-        // TODO: Provide a constructor that takes in a GGUIML file and parses it into an AST (make tree private)
         // TODO: Provide a "ScaleToViewport" function that creates a "ScaledTree" with fully-resolved references, and positions as pixels. It should walk along the tree and fire a publically-exposed event with appropriate contexts (root position, padding, parent) on each element
     }
 }
