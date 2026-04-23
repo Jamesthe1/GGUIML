@@ -53,12 +53,12 @@ namespace GGUIML {
                 { "inner-alignment/offset", (s) => AlignmentCharacterMatches (s, '(') },
                 { "inner-alignment/padding", (s) => AlignmentCharacterMatches (s, '[') },
                 { "inner-alignment", AlignmentMatches },
-                { "scale", s => ParserExtensions.CanParse (() => s.ParsePoint ()) },
+                { "scale", s => ParserExtensions.CanParse (s.ParsePoint) },
                 { "order", s => typeof (Element.SortOrder).EnumContainsConverted (s) },
-                { "style", s => ParserExtensions.CanParse (() => s.ParseString ()) },
+                { "style", s => ParserExtensions.CanParse (s.ParseString) },
                 { "appearance", s => typeof (Element.AppearanceType).EnumContainsConverted (s) },
                 { "type", s => Element.ElementNames.ContainsKey (s) },
-                { "name", s => ParserExtensions.CanParse (() => s.ParseString ()) }
+                { "name", s => ParserExtensions.CanParse (s.ParseString) }
             };
 
             public Queue<string> argQueue = new Queue<string> ();   // TODO: In parser func, refresh, iterate, validate

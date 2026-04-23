@@ -2,7 +2,7 @@ using GGUIML.AST.Types;
 
 namespace GGUIML.Extensions {
     internal static class ParserExtensions {
-        public static bool CanParse (this Action parser) {
+        public static bool CanParse<T> (this Func<T> parser) {
             try {
                 parser.Invoke ();
                 return true;
