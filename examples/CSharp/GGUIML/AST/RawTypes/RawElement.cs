@@ -13,5 +13,10 @@ namespace GGUIML.AST {
 
     internal class RawModule : RawNode {
         public bool template;
+        public string name;
+    }
+
+    internal class RawImport : RawNode {
+        public string name;
     }
 }

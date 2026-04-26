@@ -162,7 +162,7 @@ namespace GGUIML {
                 if (state.currentNode != null)
                     warnings.Add (new ParserWarning ("Element still exists while creating a new one, this is probably the sign of an error with the parser", state.lineNumber));
 
-                if (args[0] == "MODULE" || args[0] == "TEMPLATE") {
+                if (args[0] == "MODULE" || args[0] == "TEMPLATE" || args[0] == "IMPORT") {
                     HandleModules (args, ref state);
                     continue;
                 }
@@ -179,7 +179,7 @@ namespace GGUIML {
                 state.storedHintText = "";  // Clearing out hint text for the next iteration
 
                 List<string> inferredArgs = new List<string> ();
-                args.ForEachIter ((arg, argPos) => {
+                args.ForEachIter ((arg, argPos) => {    // TODO: Copy most code to support typeargs and module imports too
                     IRawArgument rawArgument;
                     if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {
                         rawArgument = new RawReference {
@@ -200,12 +200,15 @@ namespace GGUIML {
                             throw new GUILParseException ("Invalid number of equal signs when assigning to named value", state.lineNumber);
                         rawArgument.Name = namedArg[0];
                         rawArgument.Data = namedArg[1];
+
+                        state.currentNode.baseArgs.Add (rawArgument);
+                    }
+                    else if (rawArgument is RawReference) { // Nameless references are okay to keep
+                        state.currentNode.baseArgs.Add (rawArgument);
                     }
                     else {
                         inferredArgs.Add (arg);
                     }
-
-                    state.currentNode.baseArgs.Add (rawArgument);
                 });
                 // Inferred arguments are examined separately because of named arguments taking inference
                 state.RefreshArgumentQueue ();
@@ -274,12 +277,13 @@ namespace GGUIML {
         }
 
         private void HandleTypeargs (string[] args, ref ParserState state) {
+            RawElement currentElement = state.currentNode as RawElement;
             if (args[0] == "TYPEARG") {
                 if (state.currentNode == null)
                     throw new GUILParseException ("Type arguments declared but no element of which to give them to, check indentation", state.lineNumber);
                 if (state.indent <= state.currentNode.indentation)   // We might not actually reach a case where indentation is *less* than our element, but better safe than sorry
                     throw new GUILParseException ("Type arguments have incorrect indentation", state.lineNumber);
-                if (state.currentNode is RawElement == false)
+                if (currentElement == null)
                     throw new GUILParseException ("Type arguments cannot be declared on modules or templates", state.lineNumber);
                 
                 state.interpMode = ParserState.InterpMode.Typearg;
@@ -289,20 +293,39 @@ namespace GGUIML {
                 state.interpMode = ParserState.InterpMode.None;
                 return;
             }
-            // TODO: Parse named arguments
+            
+            int lineNum = state.lineNumber;
+            args.ForEachIter((arg, i) => {
+                string[] namedArg = arg.ProtectedSplit ('=');
+                if (namedArg.Length != 2)
+                    throw new GUILParseException ("Invalid number of equal signs when assigning to named value", lineNum);
+            });
         }
 
         private void HandleModules (string[] args, ref ParserState state) {
-            state.currentNode = new RawModule {
-                template = args[0] == "TEMPLATE",
-                lineNumber = state.lineNumber,
-                indentation = state.indent
-            };
+            if (args.Count () < 2)
+                throw new GUILParseException ($"{args[0]} is missing a name", state.lineNumber);
 
             int lineNum = state.lineNumber;
 
-            args.Skip (1).ForEachIter ((s, i) => new RawValue {
-                Name = s,
+            if (args[0] == "IMPORT") {
+                state.currentNode = new RawImport {
+                    name = args[1],
+                    lineNumber = lineNum,
+                    indentation = state.indent
+                };
+            }
+            else {
+                state.currentNode = new RawModule {
+                    template = args[0] == "TEMPLATE",
+                    name = args[1],
+                    lineNumber = lineNum,
+                    indentation = state.indent
+                };
+            }
+
+            args.Skip (2).ForEachIter ((arg, i) => new RawValue {
+                Name = arg,
                 Data = null,
                 LineNumber = lineNum,
                 Position = i
