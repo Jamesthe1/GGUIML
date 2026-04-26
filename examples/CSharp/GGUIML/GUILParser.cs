@@ -324,12 +324,12 @@ namespace GGUIML {
                 };
             }
 
-            args.Skip (2).ForEachIter ((arg, i) => new RawValue {
+            state.currentNode.baseArgs = args.Skip (2).SelectIter ((arg, i) => (IRawArgument)new RawValue {
                 Name = arg,
                 Data = null,
                 LineNumber = lineNum,
                 Position = i
-            });
+            }).ToList ();
         }
 
         private string ExtractHintText (ref string lineState, ref ParserState state) {

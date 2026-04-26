@@ -7,6 +7,13 @@ namespace GGUIML.Extensions {
             }
         }
 
+        public static IEnumerable<U> SelectIter<T, U> (this IEnumerable<T> values, Func<T, int, U> callback) {
+            for (int i = 0; i < values.Count (); i++) {
+                T item = values.ElementAt (i);
+                yield return callback.Invoke (item, i);
+            }
+        }
+
         public static string KebabCaseToPascal (this string value) {
             if (string.IsNullOrEmpty (value))
                 throw new ArgumentException ("Value must not be null or empty");
