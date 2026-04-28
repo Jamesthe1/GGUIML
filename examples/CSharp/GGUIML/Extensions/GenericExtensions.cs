@@ -34,10 +34,10 @@ namespace GGUIML.Extensions {
             { '[', ']' },
             { '{', '}' }
         };
-        public static string[] ProtectedSplit (this string value, params char[] separator) {
-            List<string> strings = new List<string> { "" };
+        public static int ProtectedFindIndex (this string value, params char[] separator) {
             char endChar = '\0';
-            foreach (char c in value) {
+            for (int i = 0; i < value.Length; i++) {
+                char c = value[i];
                 if (endChar != '\0') {
                     if (c == endChar)
                         endChar = '\0';
@@ -49,11 +49,26 @@ namespace GGUIML.Extensions {
                 }
 
                 if (separator.Contains (c)) {
-                    if (strings.Last () != "")
-                    strings.Add ("");
-                    continue;
+                    return i;
                 }
-                strings[strings.Count - 1] += c.ToString ();    // Can't assign to the result returned by a .Last() call...
+            }
+            return -1;
+        }
+
+        public static bool ProtectedContains (this string value, params char[] chars) {
+            return value.ProtectedFindIndex (chars) != -1;
+        }
+
+        public static string[] ProtectedSplit (this string value, params char[] separator) {
+            List<string> strings = new List<string> { value };
+            int idx;
+            while ((idx = strings.Last ().ProtectedFindIndex (separator)) != -1) {
+                string lastStr = strings.Last ();
+                strings[strings.Count - 1] = lastStr.Substring (0, idx);
+
+                lastStr = lastStr.Substring (idx + 1);
+                if (lastStr != "")  // We don't want empty data in our split
+                    strings.Add (lastStr);
             }
             return strings.ToArray ();
         }

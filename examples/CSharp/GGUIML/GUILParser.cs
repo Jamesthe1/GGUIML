@@ -106,8 +106,7 @@ namespace GGUIML {
         }
 
         // TODO: Separate class that contains our resulting complete tree, with warnings
-        // Make ParserWarning a class and add inheriting classes
-        private List<ParserWarning> warnings;  // TODO: Make class of string message, int line number
+        private List<ParserWarning> warnings;
 
         public GUILParser (Stream guilStream) {
             using (StreamReader reader = new StreamReader (guilStream)) {
@@ -148,7 +147,7 @@ namespace GGUIML {
                 string[] args = lineState.Trim ().ProtectedSplit (' ', '\t');
                 
                 if (args[0] == "TYPEARG" || state.interpMode == ParserState.InterpMode.Typearg) {
-                    HandleTypeargs (args, ref state);   // This will change the interp mode, so the check below is needed
+                    HandleTypeargs (args, ref state);   // This may change the interp mode back to "none" and not process any arguments, so the check below is needed
                     if (state.interpMode == ParserState.InterpMode.Typearg)
                         continue;
                 }
@@ -178,49 +177,13 @@ namespace GGUIML {
                     state.rawTree.Add (state.currentNode);
                 state.storedHintText = "";  // Clearing out hint text for the next iteration
 
-                List<string> inferredArgs = new List<string> ();
-                args.ForEachIter ((arg, argPos) => {    // TODO: Copy most code to support typeargs and module imports too
-                    IRawArgument rawArgument;
-                    if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {
-                        rawArgument = new RawReference {
-                            Position = argPos,
-                            LineNumber = state.lineNumber
-                        };
-                    }
-                    else {
-                        rawArgument = new RawValue {
-                            Position = argPos,
-                            LineNumber = state.lineNumber
-                        };
-                    }
-
-                    if (rawArgument.Data.Contains ('=')) {
-                        string[] namedArg = arg.ProtectedSplit ('=');
-                        if (namedArg.Length > 2)
-                            throw new GUILParseException ("Invalid number of equal signs when assigning to named value", state.lineNumber);
-                        rawArgument.Name = namedArg[0];
-                        rawArgument.Data = namedArg[1];
-
-                        state.currentNode.baseArgs.Add (rawArgument);
-                    }
-                    else if (rawArgument is RawReference) { // Nameless references are okay to keep
-                        state.currentNode.baseArgs.Add (rawArgument);
-                    }
-                    else {
-                        inferredArgs.Add (arg);
-                    }
-                });
+                List<IRawArgument> inferredArgs = new List<IRawArgument> ();
+                state.currentNode.baseArgs = ParseArgs (args, ref state, inferredArgs.Add);
                 // Inferred arguments are examined separately because of named arguments taking inference
                 state.RefreshArgumentQueue ();
-                inferredArgs.ForEachIter ((arg, argPos) => {
-                    string argName = GetArgumentName (arg, ref state);   // This will throw an exception if no matching argument is found
-                    IRawArgument rawArgument = new RawValue {
-                        Name = argName,
-                        Data = arg,
-                        Position = argPos,
-                        LineNumber = state.lineNumber,
-                    };
-                    state.currentNode.baseArgs.Add (rawArgument);
+                inferredArgs.ForEach (arg => {
+                    arg.Name = GetArgumentName (arg.Data, ref state);   // This will throw an exception if no matching argument is found
+                    state.currentNode.baseArgs.Add (arg);
                 });
             }
         }
@@ -284,7 +247,7 @@ namespace GGUIML {
                 if (state.indent <= state.currentNode.indentation)   // We might not actually reach a case where indentation is *less* than our element, but better safe than sorry
                     throw new GUILParseException ("Type arguments have incorrect indentation", state.lineNumber);
                 if (currentElement == null)
-                    throw new GUILParseException ("Type arguments cannot be declared on modules or templates", state.lineNumber);
+                    throw new GUILParseException ("Type arguments cannot be declared on modules, templates, or imports", state.lineNumber);
                 
                 state.interpMode = ParserState.InterpMode.Typearg;
             }
@@ -295,16 +258,17 @@ namespace GGUIML {
             }
             
             int lineNum = state.lineNumber;
-            args.ForEachIter((arg, i) => {
-                string[] namedArg = arg.ProtectedSplit ('=');
-                if (namedArg.Length != 2)
-                    throw new GUILParseException ("Invalid number of equal signs when assigning to named value", lineNum);
-            });
+            List<IRawArgument> rawArgs = ParseArgs (args, ref state, arg => throw new GUILParseException ("Type arguments need to be assigned by name", lineNum));
+            currentElement.typeArgs.AddRange (rawArgs);
         }
 
         private void HandleModules (string[] args, ref ParserState state) {
             if (args.Count () < 2)
                 throw new GUILParseException ($"{args[0]} is missing a name", state.lineNumber);
+            if (state.storedHintText != "") {
+                state.storedHintText = "";
+                warnings.Add (new ParserWarning ("Hint text is not allowed for modules, templates, or imports", state.lineNumber - 1));
+            }
 
             int lineNum = state.lineNumber;
 
@@ -324,12 +288,57 @@ namespace GGUIML {
                 };
             }
 
-            state.currentNode.baseArgs = args.Skip (2).SelectIter ((arg, i) => (IRawArgument)new RawValue {
-                Name = arg,
-                Data = null,
-                LineNumber = lineNum,
-                Position = i
-            }).ToList ();
+            state.currentNode.baseArgs = ParseArgs ((string[])args.Skip (2), ref state, null);
+        }
+
+        private List<IRawArgument> ParseArgs (string[] args, ref ParserState state, Action<IRawArgument> onDiscard, bool assignable = true) {
+            int lineNum = state.lineNumber;
+            List<IRawArgument> parsedArgs = new List<IRawArgument> ();
+
+            args.ForEachIter ((arg, argPos) => {
+                IRawArgument rawArgument;
+                if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {   // TODO: If preceded with backslash in double quotes, skip
+                    if (!assignable)
+                        throw new GUILParseException ("Argument references are not allowed for this type", lineNum);
+                    rawArgument = new RawReference {
+                        Position = argPos,
+                        LineNumber = lineNum
+                    };
+                }
+                else {
+                    rawArgument = new RawValue {
+                        Position = argPos,
+                        LineNumber = lineNum
+                    };
+                }
+
+                if (rawArgument.Data.Contains ('=')) {  // TODO: Avoid detection in protected regions
+                    if (!assignable)
+                        throw new GUILParseException ("Assignments are not allowed for this type", lineNum);
+                    
+                    string[] namedArg = arg.ProtectedSplit ('=');
+                    if (namedArg.Length > 2)
+                        throw new GUILParseException ("Invalid number of equal signs when assigning to named value", lineNum);
+                    rawArgument.Name = namedArg[0];
+                    rawArgument.Data = namedArg[1];
+
+                    parsedArgs.Add (rawArgument);
+                }
+                else if (!assignable) {
+                    rawArgument.Name = arg;
+                    parsedArgs.Add (rawArgument);
+                }
+                else if (rawArgument is RawReference) { // Nameless references are okay to keep; we will only reach this condition if assignments are allowed
+                    rawArgument.Data = arg;
+                    parsedArgs.Add (rawArgument);
+                }
+                else {
+                    rawArgument.Data = arg;
+                    onDiscard?.Invoke (rawArgument);
+                }
+            });
+
+            return parsedArgs;
         }
 
         private string ExtractHintText (ref string lineState, ref ParserState state) {
@@ -406,5 +415,6 @@ namespace GGUIML {
         }
 
         // TODO: Provide a "ScaleToViewport" function that creates a "ScaledTree" with fully-resolved references, and positions as pixels. It should walk along the tree and fire a publically-exposed event with appropriate contexts (root position, padding, parent) on each element
+        // This will also populate the "associations" member
     }
 }
