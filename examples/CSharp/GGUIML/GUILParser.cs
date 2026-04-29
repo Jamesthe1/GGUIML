@@ -20,6 +20,8 @@ namespace GGUIML {
 
             public int indent = 0;
 
+            public int typeargIndent = -1;
+
             public int lineNumber = 0;
 
             public Stack<RawNode> currentSequence = new Stack<RawNode> ();
@@ -250,9 +252,10 @@ namespace GGUIML {
                     throw new GUILParseException ("Type arguments cannot be declared on modules, templates, or imports", state.lineNumber);
                 
                 state.interpMode = ParserState.InterpMode.Typearg;
+                state.typeargIndent = state.indent;
             }
 
-            if (args[0] != "TYPEARG" && state.indent <= state.currentNode.indentation + 1) {
+            if (args[0] != "TYPEARG" && state.indent <= state.typeargIndent) {
                 state.interpMode = ParserState.InterpMode.None;
                 return;
             }
