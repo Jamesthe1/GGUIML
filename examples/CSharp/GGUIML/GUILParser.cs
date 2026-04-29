@@ -26,7 +26,7 @@ namespace GGUIML {
 
             public Stack<RawNode> currentSequence = new Stack<RawNode> ();
 
-            public List<RawNode> rawTree = new List<RawNode> ();
+            public RawTree rawTree = new RawTree ();
 
             public RawNode currentNode = null;
 
@@ -119,7 +119,7 @@ namespace GGUIML {
             }
         }
 
-        private void ParseElementsAndChildren (StreamReader reader) {
+        private RawTree ParseElementsAndChildren (StreamReader reader) {
             ParserState state = new ParserState ();
             while (true) {
                 state.lineNumber++;
@@ -134,7 +134,7 @@ namespace GGUIML {
                 if (state.indent > 0 && state.rawTree.Count == 0)
                     warnings.Add (new ParserWarning ("Element has indentation but no parent, this may be the sign of a missing element or incorrect parenting", state.lineNumber));
 
-                if (state.currentNode != null)
+                if (state.currentNode != null && state.indent <= state.currentNode.indentation)
                     HandleParenting (ref state);
                 
                 if (state.interpMode != ParserState.InterpMode.HintText)
@@ -160,15 +160,12 @@ namespace GGUIML {
                     state.currentNode = null;
                 }
 
-                if (state.currentNode != null)
-                    warnings.Add (new ParserWarning ("Element still exists while creating a new one, this is probably the sign of an error with the parser", state.lineNumber));
-
                 if (args[0] == "MODULE" || args[0] == "TEMPLATE" || args[0] == "IMPORT") {
                     HandleModules (args, ref state);
                     continue;
                 }
 
-                state.currentNode = new RawElement {
+                state.currentNode = new RawElement {    // Intentional override of previous element
                     hintText = state.storedHintText,
                     lineNumber = state.lineNumber,
                     indentation = state.indent
@@ -176,7 +173,7 @@ namespace GGUIML {
                 if (state.currentSequence.Count > 0)
                     state.currentSequence.Last ().children.Add (state.currentNode);
                 else
-                    state.rawTree.Add (state.currentNode);
+                    state.rawTree.AddRoot (state.currentNode);
                 state.storedHintText = "";  // Clearing out hint text for the next iteration
 
                 List<IRawArgument> inferredArgs = new List<IRawArgument> ();
@@ -188,6 +185,7 @@ namespace GGUIML {
                     state.currentNode.baseArgs.Add (arg);
                 });
             }
+            return state.rawTree;
         }
 
         private int ExtractIndentation (ref string lineState, ref ParserState state) {
@@ -207,13 +205,14 @@ namespace GGUIML {
                     state.indentMode = ParserState.IndentMode.Spaces;
                     goto case ParserState.IndentMode.Spaces;
                 case ParserState.IndentMode.Tabs:
-                    // TODO: if there is more than one additional indentation than the state, and the state is not in "tooltip" mode, throw error
                     while (lineState.StartsWith ("\t")) {
                         indentation++;
                         lineState.Remove (0, 1);
 
-                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None)
+                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
                             break;
+                        if (indentation > state.currentNode.indentation + 1 && indentation > state.typeargIndent + 1)
+                            warnings.Add (new ParserWarning ("Multiple indentations detected, this might indicate a missing parent or create undesired behavior", state.lineNumber));
                     }
                     break;
                 case ParserState.IndentMode.Spaces:
@@ -221,7 +220,7 @@ namespace GGUIML {
                         indentation++;
                         lineState.Remove (0, 1);
 
-                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None)
+                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
                             break;
                     }
                     break;
@@ -230,14 +229,12 @@ namespace GGUIML {
         }
 
         private void HandleParenting (ref ParserState state) {
-            if (state.indent <= state.currentNode.indentation) {
-                state.currentNode = null;
-                // Chances are this may not fire but it's good to clear out any parents we are no longer a part of
-                while (state.indent <= state.currentSequence.Peek ().indentation) {
-                    if (state.currentSequence.Count == 0)
-                        break;
-                    state.currentSequence.Pop ();
-                }
+            state.currentNode = null;
+            // Chances are this may not fire but it's good to clear out any parents we are no longer a part of
+            while (state.indent <= state.currentSequence.Peek ().indentation) {
+                if (state.currentSequence.Count == 0)
+                    break;
+                state.currentSequence.Pop ();
             }
         }
 
@@ -257,6 +254,7 @@ namespace GGUIML {
 
             if (args[0] != "TYPEARG" && state.indent <= state.typeargIndent) {
                 state.interpMode = ParserState.InterpMode.None;
+                state.typeargIndent = -1;
                 return;
             }
             
