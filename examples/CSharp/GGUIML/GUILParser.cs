@@ -27,6 +27,8 @@ namespace GGUIML {
 
             public int typeargIndent = -1;
 
+            public int argIndent = -1;
+
             public int lineNumber = 1;
 
             public Stack<RawNode> currentSequence = new Stack<RawNode> ();
@@ -46,9 +48,20 @@ namespace GGUIML {
                 Typearg,
                 String,
                 PureString,
+                Array,
             }
 
-            public InterpMode interpMode = InterpMode.None;
+            public InterpMode InterpreterMode {
+                get => interpMode;
+                set {
+                    prevInterpMode = interpMode;
+                    interpMode = value;
+                }
+            }
+
+            private InterpMode interpMode = InterpMode.None;
+
+            public InterpMode prevInterpMode = InterpMode.None;
 
             public delegate bool ArgCheck (string str);
             public static Dictionary<string, ArgCheck> ArgumentChecks = new Dictionary<string, ArgCheck> {
@@ -130,11 +143,11 @@ namespace GGUIML {
                 if (depth > 0) {
                     line += new string(' ', depth * 2);
                     if (i == nodes.Count - 1)
-                        line += "╘";
+                        line += "╘ ";
                     else
-                        line += "╞";
-                    line += nodes[i].ToString ();
+                        line += "╞ ";
                 }
+                line += nodes[i].ToString ();
                 Console.WriteLine (line);
                 DebugPrintRawTree (nodes[i].children, depth + 1);
             }
@@ -171,9 +184,9 @@ namespace GGUIML {
                 
                 // TODO: Handle string assignments; ignore comment characters in strings
                 Console.WriteLine ("Handling comments");
-                if (state.interpMode != ParserState.InterpMode.HintText)
+                if (state.InterpreterMode != ParserState.InterpMode.HintText)
                     HandleComments (ref lineState, ref state);  // Chances are this may change the state to "Comment", so we're not going to add an "else" to the next line
-                if (lineState == "" || state.interpMode == ParserState.InterpMode.Comment)
+                if (lineState == "" || state.InterpreterMode == ParserState.InterpMode.Comment)
                     continue;
                 
                 Console.WriteLine ("Extracting indents");
@@ -183,23 +196,29 @@ namespace GGUIML {
                 if (state.indent > 0 && state.rawTree.Count == 0)
                     warnings.Add (new ParserWarning ("Element has indentation but no parent, this may be the sign of a missing element or incorrect parenting", state.lineNumber));
 
-                Console.WriteLine ("Adjusting parent");
+                Console.WriteLine ("Adjusting indent states");
                 if (state.currentNode != null)
-                    HandleParenting (ref state);    // If our indentation falls below any indentation marker, our state will be reset back to "None"
+                    HandleIndentState (ref state);    // If our indentation falls below any indentation marker, our state will be reset back to "None"; handles parenting
+                
+                Console.WriteLine ("Handling argument types");
+                if (state.InterpreterMode == ParserState.InterpMode.String || state.InterpreterMode == ParserState.InterpMode.PureString || state.InterpreterMode == ParserState.InterpMode.Array) {
+                    HandleMultilineArgs (ref lineState, ref state);
+                    continue;
+                }
                 
                 Console.WriteLine ("Handling hints");
                 state.storedHintText += ExtractHintText (ref lineState, ref state);
-                if (lineState == "" || state.interpMode == ParserState.InterpMode.HintText) // Just in case line state isn't cleared fsr, this state check is a fallback
+                if (lineState == "" || state.InterpreterMode == ParserState.InterpMode.HintText) // Just in case line state isn't cleared fsr, this state check is a fallback
                     continue;
-                if (state.storedHintText != "" && state.interpMode == ParserState.InterpMode.None)
+                if (state.storedHintText != "" && state.InterpreterMode == ParserState.InterpMode.None)
                     Console.WriteLine ("HINT: " + state.storedHintText);
                 
                 string[] args = lineState.Trim ().ProtectedSplit (' ', '\t');
                 
                 Console.WriteLine ("Examining typeargs");
-                if (args[0] == "TYPEARG" || state.interpMode == ParserState.InterpMode.Typearg) {
-                    HandleTypeargs (args, ref state);   // This may change the interp mode back to "none" and not process any arguments, so the check below is needed
-                    if (state.interpMode == ParserState.InterpMode.Typearg)
+                if (args[0] == "TYPEARG" || state.InterpreterMode == ParserState.InterpMode.Typearg) {
+                    HandleTypeargs (args, ref state);   // This may change the interp mode to anything except "none", so the check below is needed
+                    if (state.InterpreterMode != ParserState.InterpMode.None)
                         continue;
                 }
 
@@ -239,6 +258,17 @@ namespace GGUIML {
             return state.rawTree;
         }
 
+        private string GetArgumentName (string arg, ref ParserState state) {
+            while (state.argQueue.Count > 0) {
+                string argName = state.argQueue.Dequeue ();
+                if (state.currentNode.baseArgs.Exists (otherArg => otherArg.Name == argName))
+                    continue;
+                if (ParserState.ArgumentChecks[argName].Invoke (arg))
+                    return argName;
+            }
+            throw new GUILParseException ($"No valid inference could be found for argument: {arg}", state.lineNumber);
+        }
+
         private int ExtractIndentation (ref string lineState, ref ParserState state) {
             int indentation = 0;
 
@@ -260,9 +290,9 @@ namespace GGUIML {
                         indentation++;
                         lineState = lineState.Remove (0, 1);
 
-                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
+                        if (indentation >= state.indent && (state.InterpreterMode == ParserState.InterpMode.Comment || state.InterpreterMode == ParserState.InterpMode.HintText))
                             break;
-                        if (indentation > state.currentNode.indentation + 1 && indentation > state.typeargIndent + 1)
+                        if (indentation > state.currentNode.indentation + 1 && indentation > state.typeargIndent + 1 && indentation > state.argIndent + 1)
                             warnings.Add (new ParserWarning ("Multiple indentations detected, this might indicate a missing parent or create undesired behavior", state.lineNumber));
                     }
                     if (lineState.StartsWith (" "))
@@ -273,7 +303,7 @@ namespace GGUIML {
                         indentation++;
                         lineState = lineState.Remove (0, 1);
 
-                        if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
+                        if (indentation >= state.indent && state.InterpreterMode != ParserState.InterpMode.None && state.InterpreterMode != ParserState.InterpMode.Typearg)
                             break;
                     }
                     if (lineState.StartsWith ("\t"))
@@ -283,9 +313,14 @@ namespace GGUIML {
             return indentation;
         }
 
-        private void HandleParenting (ref ParserState state) {
-            if (state.interpMode == ParserState.InterpMode.Typearg && state.indent <= state.typeargIndent) {
-                state.interpMode = ParserState.InterpMode.None;
+        private void HandleIndentState (ref ParserState state) {
+            if (state.InterpreterMode == ParserState.InterpMode.Array && state.indent <= state.argIndent) {
+                state.InterpreterMode = state.prevInterpMode;
+                state.argIndent = -1;
+                state.currentArgument = null;
+            }
+            if (state.InterpreterMode == ParserState.InterpMode.Typearg && state.indent <= state.typeargIndent) {
+                state.InterpreterMode = ParserState.InterpMode.None;
                 state.typeargIndent = -1;
             }
             if (state.indent <= state.currentNode.indentation) {
@@ -293,13 +328,13 @@ namespace GGUIML {
                 // Chances are this may not fire but it's good to clear out any parents we are also no longer a part of
                 while (state.indent <= state.currentSequence.Peek ().indentation) {
                     state.currentSequence.Pop ();
-                    switch (state.interpMode) {
+                    switch (state.InterpreterMode) {
                         case ParserState.InterpMode.None:
                         case ParserState.InterpMode.Comment:
                         case ParserState.InterpMode.Typearg:    // Typeargs already handled by the above; we might not even reach this condition
                             break;
                         default:
-                            throw new GUILParseException ("Invalid reduction of indentation", state.indent);
+                            throw new GUILParseException ($"Invalid reduction of indentation in {state.InterpreterMode}", state.indent);
                     }
                     // This section avoids an invalid Peek on an empty stack
                     if (state.currentSequence.Count == 0)
@@ -318,7 +353,7 @@ namespace GGUIML {
                 if (currentElement == null)
                     throw new GUILParseException ("Type arguments cannot be declared on modules, templates, or imports", state.lineNumber);
                 
-                state.interpMode = ParserState.InterpMode.Typearg;
+                state.InterpreterMode = ParserState.InterpMode.Typearg;
                 state.typeargIndent = state.indent;
                 args = args.Skip (1).ToArray ();
                 if (args.Length == 0)
@@ -362,6 +397,7 @@ namespace GGUIML {
         private List<IRawArgument> ParseArgs (string[] args, ref ParserState state, Action<IRawArgument> onDiscard, bool assignable = true) {
             int lineNum = state.lineNumber;
             List<IRawArgument> parsedArgs = new List<IRawArgument> ();
+            bool lineOpen = false;
 
             args.ForEachIter ((arg, argPos) => {
                 IRawArgument rawArgument;
@@ -387,10 +423,13 @@ namespace GGUIML {
                         throw new GUILParseException ("Assignments are not allowed for this type", lineNum);
                     
                     string[] namedArg = arg.ProtectedSplit ('=');
-                    if (namedArg.Length > 2)
+                    if (namedArg.Length != 2 && (namedArg.Length > 2 || argPos != args.Length - 1)) // Only thrown when above 2, or the assignment is empty and not last
                         throw new GUILParseException ("Invalid number of equal signs when assigning to named value", lineNum);
                     rawArgument.Name = namedArg[0];
-                    rawArgument.Data = namedArg[1];
+                    if (namedArg.Length == 2)
+                        rawArgument.Data = namedArg[1];
+                    else
+                        lineOpen = true;
 
                     parsedArgs.Add (rawArgument);
                 }
@@ -411,18 +450,24 @@ namespace GGUIML {
                 }
             });
 
+            if (lineOpen) {
+                state.currentArgument = parsedArgs.Last ();
+                state.InterpreterMode = ParserState.InterpMode.Array;
+                state.argIndent = state.indent;
+            }
+
             return parsedArgs;
         }
 
         private string ExtractHintText (ref string lineState, ref ParserState state) {
-            Console.WriteLine ("INTERP MODE: " + state.interpMode);
+            Console.WriteLine ("INTERP MODE: " + state.InterpreterMode);
             string innerText;
-            if (lineState.StartsWith ("##(") && state.interpMode == ParserState.InterpMode.None) {
+            if (lineState.StartsWith ("##(") && state.InterpreterMode == ParserState.InterpMode.None) {
                 lineState = lineState.Remove (0, 3);
-                state.interpMode = ParserState.InterpMode.HintText;
+                state.InterpreterMode = ParserState.InterpMode.HintText;
             }
             if (lineState.Contains (")##")) {
-                if (state.interpMode != ParserState.InterpMode.HintText)
+                if (state.InterpreterMode != ParserState.InterpMode.HintText)
                     throw new GUILParseException ("Invalid tooltip closure", state.lineNumber);
                 
                 int endIdx = lineState.IndexOf (")##");
@@ -432,17 +477,17 @@ namespace GGUIML {
                 if (lineState.Trim ().Length > 0)
                     throw new GUILParseException ("Invalid text after tooltip closure", state.lineNumber);
                 
-                state.interpMode = ParserState.InterpMode.None;
+                state.InterpreterMode = ParserState.InterpMode.None;
                 return innerText;
             }
-            if (lineState.StartsWith ("##") && state.interpMode == ParserState.InterpMode.None) {
+            if (lineState.StartsWith ("##") && state.InterpreterMode == ParserState.InterpMode.None) {
                 Console.WriteLine ("HINT VALID: " + lineState);
                 innerText = lineState.Remove (0, 2).Trim ();
                 lineState = "";
                 return innerText;
             }
 
-            if (state.interpMode != ParserState.InterpMode.HintText)
+            if (state.InterpreterMode != ParserState.InterpMode.HintText)
                 return "";
             
             innerText = lineState;
@@ -455,24 +500,24 @@ namespace GGUIML {
             if (lineState.StartsWith ("##") || lineState.StartsWith ("##("))
                 return;
 
-            if (lineState.Contains ("#(") && state.interpMode != ParserState.InterpMode.Comment) {
+            if (lineState.Contains ("#(") && state.InterpreterMode != ParserState.InterpMode.Comment) {
                 int idx = lineState.IndexOf ("#(");
                 if (idx == 0 || lineState.Substring (idx - 1, 3) != "##(") {    // Tooltip sanity check
                     lineState = lineState.Substring (0, idx);
-                    state.interpMode = ParserState.InterpMode.Comment;
+                    state.InterpreterMode = ParserState.InterpMode.Comment;
                 }
             }
             if (lineState.Contains (")#")) {
-                if (state.interpMode != ParserState.InterpMode.Comment)
+                if (state.InterpreterMode != ParserState.InterpMode.Comment)
                     throw new GUILParseException ("Invalid comment closure", state.lineNumber);
                 
                 int idx = lineState.IndexOf (")#");
                 if (lineState.Substring (0, idx + 3) != ")##") {
                     lineState = lineState.Substring (idx + 2);
-                    state.interpMode = ParserState.InterpMode.None;
+                    state.InterpreterMode = ParserState.InterpMode.None;
                 }
             }
-            if (lineState.Contains ("#") && state.interpMode != ParserState.InterpMode.Comment) {
+            if (lineState.Contains ("#") && state.InterpreterMode != ParserState.InterpMode.Comment) {
                 int idx = lineState.IndexOf ("#");
                 if (lineState.Substring (idx, 2) != "##") { // "IndexOf" will only trigger on the first encounter from the start of the string, no need to check backwards
                     lineState = lineState.Substring (0, idx);
@@ -480,15 +525,9 @@ namespace GGUIML {
             }
         }
 
-        private string GetArgumentName (string arg, ref ParserState state) {
-            while (state.argQueue.Count > 0) {
-                string argName = state.argQueue.Dequeue ();
-                if (state.currentNode.baseArgs.Exists (otherArg => otherArg.Name == argName))
-                    continue;
-                if (ParserState.ArgumentChecks[argName].Invoke (arg))
-                    return argName;
-            }
-            throw new GUILParseException ($"No valid inference could be found for argument: {arg}", state.lineNumber);
+        private void HandleMultilineArgs (ref string lineState, ref ParserState state) {
+            state.currentArgument.Data += "\n" + lineState;
+            lineState = "";
         }
 
         // TODO: Provide a "ScaleToViewport" function that creates a "ScaledTree" with fully-resolved references, and positions as pixels. It should walk along the tree and fire a publically-exposed event with appropriate contexts (root position, padding, parent) on each element

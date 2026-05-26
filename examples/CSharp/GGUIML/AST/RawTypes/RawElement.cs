@@ -28,7 +28,7 @@ namespace GGUIML.AST {
             for (int i = 0; i < typeArgs.Count; i++) {
                 IRawArgument arg = typeArgs[i];
                 result += arg.Name + "=" + arg.Data + $" (position {arg.Position}, line {arg.LineNumber})";
-                if (i < baseArgs.Count - 1)
+                if (i < typeArgs.Count - 1)
                     result += ", ";
             }
             result += $"> \"{hintText}\"";

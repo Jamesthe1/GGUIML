@@ -11,6 +11,17 @@ namespace GGUIML.Extensions {
             }
         }
 
+        /// <summary>
+        /// Like ForEachIter, but allows for a return statement to escape the for-loop.
+        /// </summary>
+        public static void ForEachIter<T> (this IEnumerable<T> values, Func<T, int, bool> callback) {
+            for (int i = 0; i < values.Count (); i++) {
+                T item = values.ElementAt (i);
+                if (callback.Invoke (item, i))
+                    break;
+            }
+        }
+
         public static IEnumerable<U> SelectIter<T, U> (this IEnumerable<T> values, Func<T, int, U> callback) {
             for (int i = 0; i < values.Count (); i++) {
                 T item = values.ElementAt (i);
@@ -75,6 +86,28 @@ namespace GGUIML.Extensions {
                     strings.Add (lastStr);
             }
             return strings.ToArray ();
+        }
+
+        public static bool ProtectedRegionOpen (this string value) {
+            bool open = false;
+            char endChar = '\0';
+            for (int i = 0; i < value.Length; i++) {
+                char c = value[i];
+                if (endChar != '\0') {
+                    if (c == endChar) {
+                        endChar = '\0';
+                        open = false;
+                    }
+                    continue;
+                }
+
+                if (ProtectedRegions.ContainsKey (c)) {
+                    endChar = ProtectedRegions[c];
+                    open = true;
+                    continue;
+                }
+            }
+            return open;
         }
     }
 }
