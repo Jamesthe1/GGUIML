@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 using GGUIML.AST.Types;
 
 namespace GGUIML.Extensions {

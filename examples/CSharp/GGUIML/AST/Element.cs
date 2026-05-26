@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using GGUIML.AST.Types;
 using GGUIML.AST.Types.Attributes;
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace GGUIML.Exceptions {
     public class GUILParseException : Exception {
         public int LineNumber { get; private set; }

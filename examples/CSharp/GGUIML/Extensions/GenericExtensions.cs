@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
 namespace GGUIML.Extensions {
     internal static class GenericExtensions {
         public static void ForEachIter<T> (this IEnumerable<T> values, Action<T, int> callback) {
@@ -18,7 +22,7 @@ namespace GGUIML.Extensions {
             if (string.IsNullOrEmpty (value))
                 throw new ArgumentException ("Value must not be null or empty");
             
-            string[] parts = (string[])value.Split ('-').Select (s => s.ToUpper ()[0] + s.Substring (1));
+            string[] parts = value.Split ('-').Select (s => s.ToUpper ()[0] + s.Substring (1)).ToArray ();
             return string.Join ("", parts);
         }
 

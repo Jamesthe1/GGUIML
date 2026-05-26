@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
 using GGUIML.AST;
 using GGUIML.Exceptions;
 using GGUIML.Extensions;
@@ -22,7 +27,7 @@ namespace GGUIML {
 
             public int typeargIndent = -1;
 
-            public int lineNumber = 0;
+            public int lineNumber = 1;
 
             public Stack<RawNode> currentSequence = new Stack<RawNode> ();
 
@@ -55,11 +60,11 @@ namespace GGUIML {
                 { "inner-alignment/offset", (s) => AlignmentCharacterMatches (s, '(') },
                 { "inner-alignment/padding", (s) => AlignmentCharacterMatches (s, '[') },
                 { "inner-alignment", AlignmentMatches },
-                { "scale", s => ParserExtensions.CanParse (s.ParsePoint) },
-                { "order", s => typeof (Element.SortOrder).EnumContainsConverted (s) },
+                { "scale", s => ParserExtensions.CanParse (s.ParseScale) },
+                { "order", typeof (Element.SortOrder).EnumContainsConverted },
                 { "style", s => ParserExtensions.CanParse (s.ParseString) },
-                { "appearance", s => typeof (Element.AppearanceType).EnumContainsConverted (s) },
-                { "type", s => Element.ElementNames.ContainsKey (s) },
+                { "appearance", typeof (Element.AppearanceType).EnumContainsConverted },
+                { "type", Element.ElementNames.ContainsKey },
                 { "name", s => ParserExtensions.CanParse (s.ParseString) }
             };
 
@@ -73,21 +78,24 @@ namespace GGUIML {
                 bool argsOk = true;
                 foreach (char c in acceptedChars)
                     argsOk = argsOk && str.Contains (c);
-                return AlignmentMatches (str.Substring (0, str.IndexOf (acceptedChars[0])));
+                if (argsOk)
+                    return AlignmentMatches (str.Substring (0, str.IndexOf (acceptedChars[0])));
+                else
+                    return false;
             }
 
             private static bool AlignmentMatches (string str) {
                 bool argsOk;
+                Type vaType = typeof (Element.ElementAlignment.VerticalAlignment);
+                Type haType = typeof (Element.ElementAlignment.HorizontalAlignment);
                 if (str.Contains ('-')) {
                     string[] subargs = str.Split ('-');
-                    if (subargs.Length > 0)
+                    if (subargs.Length > 2)
                         throw new FormatException ("Alignment contains invalid number of hyphens");
-                    argsOk = typeof (Element.ElementAlignment.VerticalAlignment).EnumContainsConverted (subargs[0]);
-                    argsOk = argsOk && typeof (Element.ElementAlignment.HorizontalAlignment).EnumContainsConverted (subargs[0]);
+                    argsOk = vaType.EnumContainsConverted (subargs[0]) && haType.EnumContainsConverted (subargs[1]);
                 }
                 else {
-                    argsOk = typeof (Element.ElementAlignment.VerticalAlignment).EnumContainsConverted (str);
-                    argsOk = argsOk || typeof (Element.ElementAlignment.HorizontalAlignment).EnumContainsConverted (str);
+                    argsOk = vaType.EnumContainsConverted (str) || haType.EnumContainsConverted (str);
                 }
                 return argsOk;
             }
@@ -95,7 +103,7 @@ namespace GGUIML {
 
         public Element[] Elements { get; private set; }
 
-        private List<AssociatedElement> associations;
+        private List<AssociatedElement> associations = new List<AssociatedElement> ();
 
         public struct ParserWarning {
             public string Message { get; set; }
@@ -105,17 +113,48 @@ namespace GGUIML {
                 Message = message;
                 LineNumber = lineNum;
             }
+
+            public override string ToString () {
+                return Message + $" (line {LineNumber})";
+            }
         }
 
         // TODO: Separate class that contains our resulting complete tree, with warnings
-        private List<ParserWarning> warnings;
+        private List<ParserWarning> warnings = new List<ParserWarning> ();
+
+        private RawTree rawTree;
+
+        private void DebugPrintRawTree (List<RawNode> nodes, int depth = 0) {
+            for (int i = 0; i < nodes.Count; i++) {
+                string line = "";
+                if (depth > 0) {
+                    line += new string(' ', depth * 2);
+                    if (i == nodes.Count - 1)
+                        line += "╘";
+                    else
+                        line += "╞";
+                    line += nodes[i].ToString ();
+                }
+                Console.WriteLine (line);
+                DebugPrintRawTree (nodes[i].children, depth + 1);
+            }
+        }
+
+        public void DebugPrintRawTree () {
+            Console.WriteLine (warnings.Count + " warnings");
+            for (int w = 0; w < warnings.Count; w++) {
+                ParserWarning warning = warnings[w];
+                Console.WriteLine (warning.Message + $" (line {warning.LineNumber})");
+            }
+            DebugPrintRawTree (rawTree.rootNodes);
+        }
 
         public GUILParser (Stream guilStream) {
             using (StreamReader reader = new StreamReader (guilStream)) {
                 string line = reader.ReadLine ();
                 if (line.TrimEnd () != "!GGUIML")
                     throw new GUILParseException ("Invalid identifier at beginning of file, should be !GGUIML", 0);
-                ParseElementsAndChildren (reader);
+                rawTree = ParseElementsAndChildren (reader);
             }
         }
 
@@ -123,31 +162,41 @@ namespace GGUIML {
             ParserState state = new ParserState ();
             while (true) {
                 state.lineNumber++;
+                Console.WriteLine ($"/// LINE {state.lineNumber} ///");
 
                 string lineState = reader.ReadLine ();
+                Console.WriteLine ("Data acquired");
                 if (lineState == null)
                     break;
                 
+                // TODO: Handle string assignments; ignore comment characters in strings
+                Console.WriteLine ("Handling comments");
+                if (state.interpMode != ParserState.InterpMode.HintText)
+                    HandleComments (ref lineState, ref state);  // Chances are this may change the state to "Comment", so we're not going to add an "else" to the next line
+                if (lineState == "" || state.interpMode == ParserState.InterpMode.Comment)
+                    continue;
+                
+                Console.WriteLine ("Extracting indents");
                 state.indent = ExtractIndentation (ref lineState, ref state);
 
                 // Wanting to warn just in case someone forgets to make a parent element
                 if (state.indent > 0 && state.rawTree.Count == 0)
                     warnings.Add (new ParserWarning ("Element has indentation but no parent, this may be the sign of a missing element or incorrect parenting", state.lineNumber));
 
-                if (state.currentNode != null && state.indent <= state.currentNode.indentation)
-                    HandleParenting (ref state);
+                Console.WriteLine ("Adjusting parent");
+                if (state.currentNode != null)
+                    HandleParenting (ref state);    // If our indentation falls below any indentation marker, our state will be reset back to "None"
                 
-                if (state.interpMode != ParserState.InterpMode.HintText)
-                    HandleComments (ref lineState, ref state);  // Chances are this may change the state to "Comment", so we're not going to add an "else" to the next line
-                if (lineState == "" || state.interpMode == ParserState.InterpMode.Comment)
-                    continue;
-                
+                Console.WriteLine ("Handling hints");
                 state.storedHintText += ExtractHintText (ref lineState, ref state);
                 if (lineState == "" || state.interpMode == ParserState.InterpMode.HintText) // Just in case line state isn't cleared fsr, this state check is a fallback
                     continue;
+                if (state.storedHintText != "" && state.interpMode == ParserState.InterpMode.None)
+                    Console.WriteLine ("HINT: " + state.storedHintText);
                 
                 string[] args = lineState.Trim ().ProtectedSplit (' ', '\t');
                 
+                Console.WriteLine ("Examining typeargs");
                 if (args[0] == "TYPEARG" || state.interpMode == ParserState.InterpMode.Typearg) {
                     HandleTypeargs (args, ref state);   // This may change the interp mode back to "none" and not process any arguments, so the check below is needed
                     if (state.interpMode == ParserState.InterpMode.Typearg)
@@ -181,7 +230,9 @@ namespace GGUIML {
                 // Inferred arguments are examined separately because of named arguments taking inference
                 state.RefreshArgumentQueue ();
                 inferredArgs.ForEach (arg => {
+                    Console.WriteLine ("NAMING ARG: " + arg.Data);
                     arg.Name = GetArgumentName (arg.Data, ref state);   // This will throw an exception if no matching argument is found
+                    Console.WriteLine ("ARGUMENT NAMED " + arg.Name);
                     state.currentNode.baseArgs.Add (arg);
                 });
             }
@@ -205,36 +256,55 @@ namespace GGUIML {
                     state.indentMode = ParserState.IndentMode.Spaces;
                     goto case ParserState.IndentMode.Spaces;
                 case ParserState.IndentMode.Tabs:
-                    while (lineState.StartsWith ("\t")) {
+                    while (lineState.StartsWith ("\t")) {   // Not using the variable since it is only evaluated once
                         indentation++;
-                        lineState.Remove (0, 1);
+                        lineState = lineState.Remove (0, 1);
 
                         if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
                             break;
                         if (indentation > state.currentNode.indentation + 1 && indentation > state.typeargIndent + 1)
                             warnings.Add (new ParserWarning ("Multiple indentations detected, this might indicate a missing parent or create undesired behavior", state.lineNumber));
                     }
+                    if (lineState.StartsWith (" "))
+                        throw new GUILParseException ("Mixed indentations are not allowed", state.lineNumber);
                     break;
                 case ParserState.IndentMode.Spaces:
                     while (lineState.StartsWith (" ")) {
                         indentation++;
-                        lineState.Remove (0, 1);
+                        lineState = lineState.Remove (0, 1);
 
                         if (indentation >= state.indent && state.interpMode != ParserState.InterpMode.None && state.interpMode != ParserState.InterpMode.Typearg)
                             break;
                     }
+                    if (lineState.StartsWith ("\t"))
+                        throw new GUILParseException ("Mixed indentations are not allowed", state.lineNumber);
                     break;
             }
             return indentation;
         }
 
         private void HandleParenting (ref ParserState state) {
+            if (state.interpMode == ParserState.InterpMode.Typearg && state.indent <= state.typeargIndent) {
+                state.interpMode = ParserState.InterpMode.None;
+                state.typeargIndent = -1;
+            }
+            if (state.indent <= state.currentNode.indentation) {
             state.currentNode = null;
-            // Chances are this may not fire but it's good to clear out any parents we are no longer a part of
-            while (state.indent <= state.currentSequence.Peek ().indentation) {
-                if (state.currentSequence.Count == 0)
-                    break;
-                state.currentSequence.Pop ();
+                // Chances are this may not fire but it's good to clear out any parents we are also no longer a part of
+                while (state.indent <= state.currentSequence.Peek ().indentation) {
+                    state.currentSequence.Pop ();
+                    switch (state.interpMode) {
+                        case ParserState.InterpMode.None:
+                        case ParserState.InterpMode.Comment:
+                        case ParserState.InterpMode.Typearg:    // Typeargs already handled by the above; we might not even reach this condition
+                            break;
+                        default:
+                            throw new GUILParseException ("Invalid reduction of indentation", state.indent);
+                    }
+                    // This section avoids an invalid Peek on an empty stack
+                    if (state.currentSequence.Count == 0)
+                        break;
+                }
             }
         }
 
@@ -250,16 +320,13 @@ namespace GGUIML {
                 
                 state.interpMode = ParserState.InterpMode.Typearg;
                 state.typeargIndent = state.indent;
-            }
-
-            if (args[0] != "TYPEARG" && state.indent <= state.typeargIndent) {
-                state.interpMode = ParserState.InterpMode.None;
-                state.typeargIndent = -1;
-                return;
+                args = args.Skip (1).ToArray ();
+                if (args.Length == 0)
+                    return;
             }
             
             int lineNum = state.lineNumber;
-            List<IRawArgument> rawArgs = ParseArgs (args, ref state, arg => throw new GUILParseException ("Type arguments need to be assigned by name", lineNum));
+            List<IRawArgument> rawArgs = ParseArgs (args, ref state, arg => throw new GUILParseException ($"Type argument ({arg}) needs to be assigned by name", lineNum));
             currentElement.typeArgs.AddRange (rawArgs);
         }
 
@@ -289,7 +356,7 @@ namespace GGUIML {
                 };
             }
 
-            state.currentNode.baseArgs = ParseArgs ((string[])args.Skip (2), ref state, null);
+            state.currentNode.baseArgs = ParseArgs (args.Skip (2).ToArray (), ref state, null);
         }
 
         private List<IRawArgument> ParseArgs (string[] args, ref ParserState state, Action<IRawArgument> onDiscard, bool assignable = true) {
@@ -298,7 +365,8 @@ namespace GGUIML {
 
             args.ForEachIter ((arg, argPos) => {
                 IRawArgument rawArgument;
-                if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {   // TODO: If preceded with backslash in double quotes, skip
+                if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {   // TODO: Ignore these characters if in a string
+                    Console.WriteLine ("REFERENCE: " + arg);
                     if (!assignable)
                         throw new GUILParseException ("Argument references are not allowed for this type", lineNum);
                     rawArgument = new RawReference {
@@ -313,7 +381,8 @@ namespace GGUIML {
                     };
                 }
 
-                if (rawArgument.Data.Contains ('=')) {  // TODO: Avoid detection in protected regions
+                if (arg.ProtectedContains ('=')) {
+                    Console.WriteLine ("ASSIGNMENT: " + arg);
                     if (!assignable)
                         throw new GUILParseException ("Assignments are not allowed for this type", lineNum);
                     
@@ -326,14 +395,17 @@ namespace GGUIML {
                     parsedArgs.Add (rawArgument);
                 }
                 else if (!assignable) {
+                    Console.WriteLine ("DECLARATION: " + arg);
                     rawArgument.Name = arg;
                     parsedArgs.Add (rawArgument);
                 }
                 else if (rawArgument is RawReference) { // Nameless references are okay to keep; we will only reach this condition if assignments are allowed
+                    Console.WriteLine ("ASSUMING NAME: " + arg);
                     rawArgument.Data = arg;
                     parsedArgs.Add (rawArgument);
                 }
                 else {
+                    Console.WriteLine ("DISCARDING: " + arg);
                     rawArgument.Data = arg;
                     onDiscard?.Invoke (rawArgument);
                 }
@@ -343,6 +415,7 @@ namespace GGUIML {
         }
 
         private string ExtractHintText (ref string lineState, ref ParserState state) {
+            Console.WriteLine ("INTERP MODE: " + state.interpMode);
             string innerText;
             if (lineState.StartsWith ("##(") && state.interpMode == ParserState.InterpMode.None) {
                 lineState = lineState.Remove (0, 3);
@@ -363,13 +436,16 @@ namespace GGUIML {
                 return innerText;
             }
             if (lineState.StartsWith ("##") && state.interpMode == ParserState.InterpMode.None) {
-                lineState = lineState.Remove (0, 2);
+                Console.WriteLine ("HINT VALID: " + lineState);
+                innerText = lineState.Remove (0, 2).Trim ();
+                lineState = "";
+                return innerText;
             }
 
             if (state.interpMode != ParserState.InterpMode.HintText)
                 return "";
             
-            innerText = lineState.Trim ();
+            innerText = lineState;
             lineState = "";
             return innerText;
         }

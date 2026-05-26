@@ -1,3 +1,5 @@
+using System;
+
 namespace GGUIML.AST.Types {
     public interface INumeric : IArgumentType {
         object BoxedValue { get; set; }

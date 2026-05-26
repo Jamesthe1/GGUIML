@@ -1,3 +1,5 @@
+using System;
+
 namespace GGUIML.AST.Types.Attributes {
     /// <summary>
     /// Marks the property or field as invalid for inheritance.
