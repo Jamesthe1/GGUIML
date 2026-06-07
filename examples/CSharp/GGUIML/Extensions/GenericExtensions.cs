@@ -109,5 +109,66 @@ namespace GGUIML.Extensions {
             }
             return open;
         }
+
+        public static int NoQuotesFindIndex (this string value, params char[] separator) {
+            char endChar = '\0';
+            for (int i = 0; i < value.Length; i++) {
+                char c = value[i];
+                if (endChar != '\0') {
+                    if (c == endChar)
+                        endChar = '\0';
+                    continue;
+                }
+                if (ProtectedRegions.ContainsKey (c) && (c == '\'' || c == '"')) {
+                    endChar = ProtectedRegions[c];
+                    continue;
+                }
+
+                if (separator.Contains (c)) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public static bool NoQuotesContains (this string value, params char[] separator) {
+            return value.NoQuotesFindIndex (separator) != -1;
+        }
+
+        public static int NoQuotesFindIndex (this string value, string separator) {
+            int pos = -1;
+            int si = 0;
+            char endChar = '\0';
+            for (int i = 0; i < value.Length; i++) {
+                char c = value[i];
+                char sc = value[si];
+                if (endChar != '\0') {
+                    if (c == endChar)
+                        endChar = '\0';
+                    continue;
+                }
+                if (ProtectedRegions.ContainsKey (c) && (c == '\'' || c == '"')) {
+                    endChar = ProtectedRegions[c];
+                    continue;
+                }
+
+                if (sc != c && pos != -1) {
+                    pos = -1;
+                    si = 0;
+                    continue;
+                }
+
+                if (pos == -1)
+                    pos = i;
+                si++;
+                if (si == separator.Length)
+                    return pos;
+            }
+            return -1;
+        }
+
+        public static bool NoQuotesContains (this string value, string separator) {
+            return value.NoQuotesFindIndex (separator) != -1;
+        }
     }
 }
