@@ -137,9 +137,9 @@ The name is written as a string, MUST NOT contain special characters (see [inter
 
 ### Element type arguments
 
-Some pre-defined types come with additional variables that could be required. On the next line at least, with one additional indentation, the keyword `TYPEARG` is used to provide type arguments. There MUST NOT be any other text between the declaration and the arguments.
+Some pre-defined types come with additional variables that could be required. On the next line at least, with one additional indentation, the keyword `TYPEARG` is used to provide type arguments if it appears first in the line. There MUST NOT be any other text between the declaration and the arguments.
 
-Arguments can be separated with a newline and indented, to indicate they are still a part of `TYPEARG`. `INHERIT` is invalid for all type arguments.
+Arguments can both be inline and across multiple lines, whether with or without the `TYPEARG` declaration. `TYPEARG` may appear across multiple lines, when another element has not been encountered. `INHERIT` is invalid for all type arguments.
 
 The following syntax is invalid:
 ```
