@@ -51,7 +51,7 @@ A rect is an array of four numerics, written as `[top, right, down, left]`. A sh
 
 A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
-A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
+A boolean MUST either be `yes` or `no`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
 A single-line comment begins with a single hashtag/pound symbol (`#`), whereas hint text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line hint text begins with `##(` and ends with `)##`. Single-line comments and hints may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
 
@@ -157,21 +157,21 @@ The following syntax is invalid:
 The following element types and their arguments are as follows:
 
 - `window`: A panel that contains various contents. If a child of another element, it is restricted to its parent's boundaries. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type arguments as well.
-	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `on`, where it defaults to an empty string. `INHERIT` is invalid.
-	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `off`.
-	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `off`.
-	- `closable`: Boolean for whether or not the window can be closed. This defaults to `on`.
-	- `resizeable`: Boolean for whether or not the window can be resized by the user adjusting its borders. This defaults to `on`, and the argument MAY be ignored by the program.
-	- `movable`: Boolean for whether or not the window can be moved by the user. This defaults to `on`, and the argument MAY be ignored by the program.
-	- `headerless`: Boolean for if this window has no header. This defaults to `off`.
-	- `borderless`: Boolean for if this window is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
+	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `yes`, where it defaults to an empty string. `INHERIT` is invalid.
+	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `no`.
+	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `no`.
+	- `closable`: Boolean for whether or not the window can be closed. This defaults to `yes`.
+	- `resizeable`: Boolean for whether or not the window can be resized by the user adjusting its borders. This defaults to `yes`, and the argument MAY be ignored by the program.
+	- `movable`: Boolean for whether or not the window can be moved by the user. This defaults to `yes`, and the argument MAY be ignored by the program.
+	- `headerless`: Boolean for if this window has no header. This defaults to `no`.
+	- `borderless`: Boolean for if this window is borderless. This defaults to `no`, and the argument MAY be ignored by the program.
 - `table`: An element that contains items. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`. Cells are filled in by the `order` of this element.
 	- `rows-columns`: A scale of `ROWSxCOLUMNS`, integers only. This is REQUIRED to the designer, and `DYNAMIC` can be used on any axis; a `break` element is suggested if both axes are dynamic. A warning SHOULD be given by the implementation to the designer if there are more children than the table's size allows, and additional children MUST be discarded.
-	- `borderless`: Boolean for if this table is borderless. This defaults to `off`, and the argument MAY be ignored by the program.
+	- `borderless`: Boolean for if this table is borderless. This defaults to `no`, and the argument MAY be ignored by the program.
 - `label`: An element that contains text. Text alignment follows the element's alignment. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`; if `justified` is on, the default is `100%xDYNAMIC`.
 	- `text`: Text of the label, as a string. This defaults to an empty string.
 	- `font-size`: The size of the font, as a numeric. Integers and decimals are treated as font points, and defaults to the style's font size. The actual font MUST be defined in the style.
-	- `justified`: Boolean that overrides text alignment behavior. The text aligned with the left side, and letter/word spacing is adjusted to be flush with both left and right sides of the element. Vertical alignment is not affected. `DYNAMIC` is invalid for the width of this element if this is set to `on`.
+	- `justified`: Boolean that overrides text alignment behavior. The text aligned with the left side, and letter/word spacing is adjusted to be flush with both left and right sides of the element. Vertical alignment is not affected. `DYNAMIC` is invalid for the width of this element if this is set to `yes`.
 - `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type arguments as well.
 	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
@@ -183,7 +183,7 @@ The following element types and their arguments are as follows:
 	- `alt-text`: Text for screen readers or when the image fails to load. This is REQUIRED for the designer.
 - `rect`: A region of a given size. Scale defaults to `DYNAMICxDYNAMIC` (fits around the size of its contents). Overflowing contents MUST be cropped by the program.
 	- `inner-scale`: The actual scale of the contents, as `WIDTHxHEIGHT`. Defaults to `DYNAMICxDYNAMIC` (the inner scale will fit around the size of its contents). If `DYNAMIC` is specified on any axis of the rect's scale, `DYNAMIC` must also appear in the same axis on the inner scale; the inner scale's dynamic axis MAY be omitted along with the `x`, and the argument is interpreted as a single numeric, but a blank argument is not allowed.
-	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `off`.
+	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `no`.
 - `graph`: A display with given data points, displayed as determined by the program style.
 	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
 - `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table.
