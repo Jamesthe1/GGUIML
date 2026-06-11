@@ -353,6 +353,8 @@ TEMPLATE template-name argument-names
 
 This behaves similarly to `MODULE` and may be imported the same way. The only difference is that relative variable references and inheritance are resolved after the template has been inserted.
 
+Note that hint text is invalid for module, template, and import declarations.
+
 ### Guidance
 
 All parser errors are intended to be visible to the designer. Therefore, a program SHOULD forward errors and warnings from the implementation if they pertain to the designer.
