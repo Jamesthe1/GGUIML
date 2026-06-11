@@ -16,7 +16,7 @@ namespace GGUIML.AST.Procedures {
                 throw new GUILParseException ($"{args[0]} is missing a name", state.lineNumber);
             if (state.storedHintText != "") {
                 state.storedHintText = "";
-                Warnings.Add (new ParserWarning ("Hint text is not allowed for modules, templates, or imports", state.lineNumber - 1));
+                throw new GUILParseException ("Hint text is not allowed for modules, templates, or imports", state.lineNumber - 1);
             }
 
             int lineNum = state.lineNumber;
@@ -25,7 +25,7 @@ namespace GGUIML.AST.Procedures {
                 state.currentNode = new RawImport {
                     name = args[1],
                     lineNumber = lineNum,
-                    indentation = state.indent
+                    indentation = state.indent,
                 };
             }
             else {
@@ -36,6 +36,10 @@ namespace GGUIML.AST.Procedures {
                     indentation = state.indent
                 };
             }
+            if (state.currentSequence.Count > 0)
+                state.currentSequence.Peek ().children.Add (state.currentNode);
+            else
+                state.rawTree.AddRoot (state.currentNode);
 
             state.currentNode.baseArgs = ParseArgs (args.Skip (2).ToArray (), ref state, null, state.currentNode is RawImport); // TODO: Add onDiscard for imports, check types and if the arg can be skipped should they not match
         }
