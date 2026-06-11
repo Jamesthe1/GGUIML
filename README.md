@@ -47,9 +47,9 @@ A scale is two numerics separated by a lowercase `x`, no whitespace. A special k
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed.
 
-A rect is an array of four numerics, written as `[top, right, down, left]`.
+A rect is an array of four numerics, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the bracket operator `[n]`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `on` or `off`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -63,6 +63,8 @@ items=
 	- 'cups': 12
 	- 'bottles': 9
 ```
+
+The value of an entry in an associative array is accessible via the dot operator `.key`. If there are multiple keys of the same name, all entries MUST be given as an indexable array.
 
 All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
 
@@ -102,7 +104,7 @@ The following alignments are available:
 
 An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position or margin/padding is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
-The margin describes the spacing away from surrounding elements, and is represented as a rect. All numerics except `DYNAMIC` are valid, and the default is `[0,0,0,0]`.
+The margin describes the spacing away from surrounding elements, and is represented as a rect. All numerics except `DYNAMIC` are valid, and the default is `[0]`.
 
 The offset position can be defined, written as a point. Any numeric is accepted, except on `z` which MUST be an integer. Percentages are interpreted as a percentage of the given inner boundary. The position defaults to `(0,0,DYNAMIC)`. The Z-order must sort elements on similar layers, from first-to-last as back-to-front respectively. `INHERIT` is invalid. If excluded, the designer SHOULD NOT leave empty parentheses (`()`).
 
@@ -243,15 +245,6 @@ $element:@variable-name		# Explicit reference to an element's argument
 
 `INHERIT` is invalid to the declaration of any variable references. Variable references, when placed as element arguments, are resolved only as a named argument, and cannot be inferred; if the variable reference's name matches an argument name, this is the only case where prefixing with the name can be excluded, as it will assume the it applies to the argument of the same name.
 
-When referencing an item in an associative array, it can be retrieved with any of the following syntax:
-
-```
-@TYPEARG.array.key-name
-@TYPEARG.array[key-name]
-```
-
-All of these entries will resolve to the variable `TYPEARG`, its sub-variable `array`, and an entry with the key `key-name`, to reference the value at this location.
-
 A variable or element reference can be expanded multiple times with curly brackets (`{` and `}`). The following example will first resolve `@variable`, then the outer reference:
 
 ```
@@ -359,7 +352,7 @@ This behaves similarly to `MODULE` and may be imported the same way. The only di
 
 Note that hint text is invalid for module, template, and import declarations.
 
-### Guidance
+## Guidance
 
 All parser errors are intended to be visible to the designer. Therefore, a program SHOULD forward errors and warnings from the implementation if they pertain to the designer.
 
