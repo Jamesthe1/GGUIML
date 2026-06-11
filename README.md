@@ -24,7 +24,17 @@ The language is case-sensitive except for element names. If the implementation e
 
 The topmost element is the container; this is the window of the application itself, or display, or module file depending on the program and its environment. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
 
+Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines are ignored.
+
 If a feature or element is unavailable in a given API, it MUST be discarded and SHOULD give a warning to the designer, but it SHOULD NOT stop the program. Custom elements MUST NOT be present. The strict palette of elements in the language ensures that one GUI file is compatible across multiple implementations and programs.
+
+The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
+
+For any argument with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any argument that is excluded by the implementation, if permitted by this document, SHOULD be documented.
+
+Most text that is displayed supports a very basic form of Markdown: `**` for bold, `*` or `_` for emphasized/italic text, and `__` for underline. All characters presented must surround text to take effect.
+
+### Types
 
 A numeric is either:
 
@@ -54,23 +64,17 @@ items=
 	- 'bottles': 9
 ```
 
+All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
+
+### Reserved characters and keywords
+
 A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#inheritance-and-references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error.
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance-and-references) for more information.
 
 Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), asterisk (`*`), and space (` `).
 
-All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
-
-The UI has the capacity to be split into modules. See [modular elements](#modular-elements) for more information.
-
-The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
-
-Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines are ignored.
-
-For any argument with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any argument that is excluded by the implementation, if permitted by this document, SHOULD be documented.
-
-Most text that is displayed supports a very basic form of Markdown: `**` for bold, `*` or `_` for emphasized/italic text, and `__` for underline. All characters presented must surround text to take effect.
+`MODULE`, `TEMPLATE`, and `IMPORT` are reserved for [modular elements](#modular-elements).
 
 ### Element syntax
 
