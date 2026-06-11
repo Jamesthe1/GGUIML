@@ -4,7 +4,9 @@ using GGUIML.Extensions;
 
 namespace GGUIML.AST.Procedures {
     internal class ModuleProcedure : ArgumentedProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Module/import declaration";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             return lineState.StartsWith ("MODULE") || lineState.StartsWith ("TEMPLATE") || lineState.StartsWith ("IMPORT");
         }
 
@@ -36,10 +38,6 @@ namespace GGUIML.AST.Procedures {
             }
 
             state.currentNode.baseArgs = ParseArgs (args.Skip (2).ToArray (), ref state, null, state.currentNode is RawImport); // TODO: Add onDiscard for imports, check types and if the arg can be skipped should they not match
-        }
-
-        public override bool TerminateLine (ref string lineState, ref ParserState state) {
-            return true;
         }
     }
 }

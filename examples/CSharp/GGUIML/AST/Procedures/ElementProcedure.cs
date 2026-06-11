@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GGUIML.Exceptions;
@@ -5,7 +6,9 @@ using GGUIML.Extensions;
 
 namespace GGUIML.AST.Procedures {
     internal class ElementProcedure : ArgumentedProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Element declaration";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             return true;
         }
 
@@ -20,7 +23,7 @@ namespace GGUIML.AST.Procedures {
                 indentation = state.indent
             };
             if (state.currentSequence.Count > 0)
-                state.currentSequence.Last ().children.Add (state.currentNode);
+                state.currentSequence.Peek ().children.Add (state.currentNode);
             else
                 state.rawTree.AddRoot (state.currentNode);
             state.storedHintText = "";  // Clearing out hint text for the next iteration
@@ -30,12 +33,13 @@ namespace GGUIML.AST.Procedures {
             // Inferred arguments are examined separately because of named arguments taking inference
             state.RefreshArgumentQueue ();
             foreach (IRawArgument arg in inferredArgs) {
-                arg.Name = GetArgumentName (arg.Data, ref state);   // This will throw an exception if no matching argument is found
+                arg.Name = GetArgumentName (arg.Data, state);   // This will throw an exception if no matching argument is found
+                Console.WriteLine ($"Inferred arg {arg.Data}: {arg.Name}");
                 state.currentNode.baseArgs.Add (arg);
             }
         }
         
-        private string GetArgumentName (string arg, ref ParserState state) {
+        private string GetArgumentName (string arg, ParserState state) {
             while (state.argQueue.Count > 0) {
                 string argName = state.argQueue.Dequeue ();
                 if (state.currentNode.baseArgs.Exists (otherArg => otherArg.Name == argName))

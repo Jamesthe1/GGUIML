@@ -70,5 +70,9 @@ namespace GGUIML.AST.Procedures {
 
             return parsedArgs;
         }
+
+        public override bool MustTerminateLine (string lineState, ParserState state) {
+            return true;
+        }
     }
 }

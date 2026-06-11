@@ -3,7 +3,9 @@ using GGUIML.Extensions;
 
 namespace GGUIML.AST.Procedures {
     internal class CommentProcedure : BaseParserProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Comment removal";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             // This function is intended to not be ran on tooltips; this check here prevents treating the appearance of comments on the same line
             if (lineState.StartsWith ("##") || lineState.StartsWith ("##("))
                 return false;
@@ -57,8 +59,8 @@ namespace GGUIML.AST.Procedures {
             lineState = "";
         }
 
-        public override bool TerminateLine (ref string lineState, ref ParserState state) {
-            return base.TerminateLine (ref lineState, ref state) || state.InterpreterMode == ParserState.InterpMode.Comment;
+        public override bool MustTerminateLine (string lineState, ParserState state) {
+            return base.MustTerminateLine (lineState, state) || state.InterpreterMode == ParserState.InterpMode.Comment;
         }
     }
 }

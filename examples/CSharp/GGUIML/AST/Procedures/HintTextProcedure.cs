@@ -2,7 +2,9 @@ using GGUIML.Exceptions;
 
 namespace GGUIML.AST.Procedures {
     internal class HintTextProcedure : BaseParserProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Hint text extraction";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             if (state.InterpreterMode == ParserState.InterpMode.HintText) {
                 return true;
             }

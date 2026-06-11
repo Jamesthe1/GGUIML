@@ -5,7 +5,9 @@ using GGUIML.Extensions;
 
 namespace GGUIML.AST.Procedures {
     internal class TypeargProcedure : ArgumentedProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Typearg declaration";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             if (state.InterpreterMode == ParserState.InterpMode.Typearg) {
                 return state.indent > state.typeargIndent;
             }
@@ -33,10 +35,6 @@ namespace GGUIML.AST.Procedures {
             int lineNum = state.lineNumber;
             List<IRawArgument> rawArgs = ParseArgs (args, ref state, arg => throw new GUILParseException ($"Type argument ({arg}) needs to be assigned by name", lineNum));
             currentElement.typeArgs.AddRange (rawArgs);
-        }
-
-        public override bool TerminateLine (ref string lineState, ref ParserState state) {
-            return true;
         }
     }
 }

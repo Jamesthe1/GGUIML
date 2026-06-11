@@ -2,7 +2,9 @@ using GGUIML.Exceptions;
 
 namespace GGUIML.AST.Procedures {
     internal class StringProcedure : BaseParserProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "String assignment";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             if (state.InterpreterMode == ParserState.InterpMode.String || state.InterpreterMode == ParserState.InterpMode.PureString) {
                 return true;
             }

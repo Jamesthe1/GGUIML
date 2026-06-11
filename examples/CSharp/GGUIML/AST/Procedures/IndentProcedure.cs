@@ -2,7 +2,9 @@ using GGUIML.Exceptions;
 
 namespace GGUIML.AST.Procedures {
     internal class IndentProcedure : BaseParserProcedure {
-        public override bool ProcedureValid (ref string lineState, ref ParserState state) {
+        public override string DebugProcedureName => "Indentation acquisition";
+
+        public override bool ProcedureValid (string lineState, ParserState state) {
             return true;
         }
 
