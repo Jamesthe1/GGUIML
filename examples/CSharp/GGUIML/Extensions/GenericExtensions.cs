@@ -30,8 +30,10 @@ namespace GGUIML.Extensions {
         }
 
         public static string KebabCaseToPascal (this string value) {
-            if (string.IsNullOrEmpty (value))
-                throw new ArgumentException ("Value must not be null or empty");
+            if (value == null)
+                throw new ArgumentException ("Value must not be null");
+            if (value == "")
+                return "";
             
             string[] parts = value.Split ('-').Select (s => s.ToUpper ()[0] + s.Substring (1)).ToArray ();
             return string.Join ("", parts);
@@ -141,26 +143,28 @@ namespace GGUIML.Extensions {
             char endChar = '\0';
             for (int i = 0; i < value.Length; i++) {
                 char c = value[i];
-                char sc = value[si];
+                char sc = separator[si];
                 if (endChar != '\0') {
                     if (c == endChar)
                         endChar = '\0';
                     continue;
                 }
-                if (ProtectedRegions.ContainsKey (c) && (c == '\'' || c == '"')) {
+                if (c == '\'' || c == '"') {
+                    pos = -1;
+                    si = 0;
                     endChar = ProtectedRegions[c];
                     continue;
                 }
 
-                if (sc != c && pos != -1) {
-                    pos = -1;
+                if (sc == c) {
+                    si++;
+                    if (pos == -1)
+                        pos = i;
+                } else {
                     si = 0;
-                    continue;
+                    pos = -1;
                 }
 
-                if (pos == -1)
-                    pos = i;
-                si++;
                 if (si == separator.Length)
                     return pos;
             }
