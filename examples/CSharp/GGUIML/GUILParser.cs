@@ -8,7 +8,7 @@ using GGUIML.Exceptions;
 
 namespace GGUIML {
     public class GUILParser<TBaseImpl> {
-        private static BaseParserProcedure[] Procedures = new BaseParserProcedure[] {
+        private static readonly BaseParserProcedure[] Procedures = new BaseParserProcedure[] {
             new CommentProcedure (),
             new IndentProcedure (),
             new ArrayProcedure (),

@@ -44,7 +44,7 @@ namespace GGUIML.AST.Procedures {
                 string argName = state.argQueue.Dequeue ();
                 if (state.currentNode.baseArgs.Exists (otherArg => otherArg.Name == argName))
                     continue;
-                if (ParserState.ArgumentChecks[argName].Invoke (arg))
+                if (ParserState.ElementArguments[argName].CanParse (arg))
                     return argName;
             }
             throw new GUILParseException ($"No valid inference could be found for argument: {arg}", state.lineNumber);

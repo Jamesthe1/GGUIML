@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GGUIML.AST;
+using GGUIML.AST.Types;
 using GGUIML.Extensions;
 
 namespace GGUIML {
@@ -54,54 +55,30 @@ namespace GGUIML {
 
         public InterpMode prevInterpMode = InterpMode.None;
 
-        public delegate bool ArgCheck (string str);
-        public static Dictionary<string, ArgCheck> ArgumentChecks = new Dictionary<string, ArgCheck> {
-            { "alignment/margin/offset", (s) => AlignmentCharacterMatches (s, '[', '(') },
-            { "alignment/offset", (s) => AlignmentCharacterMatches (s, '(') },
-            { "alignment/margin", (s) => AlignmentCharacterMatches (s, '[') },
-            { "alignment", AlignmentMatches },
-            { "inner-alignment/padding/offset", (s) => AlignmentCharacterMatches (s, '[', '(') },
-            { "inner-alignment/offset", (s) => AlignmentCharacterMatches (s, '(') },
-            { "inner-alignment/padding", (s) => AlignmentCharacterMatches (s, '[') },
-            { "inner-alignment", AlignmentMatches },
-            { "scale", s => ParserExtensions.CanParse (s.ParseScale) },
-            { "order", typeof (Element.SortOrder).EnumContainsConverted },
-            { "style", s => ParserExtensions.CanParse (s.ParseString) },
-            { "appearance", typeof (Element.AppearanceType).EnumContainsConverted },
-            { "type", Element.ElementNames.ContainsKey },
-            { "name", s => ParserExtensions.CanParse (s.ParseString) }
+        private static EnumType AlignmentEnum = new EnumType (
+            new string[] { "top", "center", "bottom" },
+            new string[] { "left", "center", "right" }
+        );
+        private static MultiType AlignmentType = new MultiType (AlignmentEnum, new Dictionary<char, RawType> {
+            { '[', new RectType () },
+            { '(', new PointType () }
+        });
+        public static Dictionary<string, RawType> ElementArguments = new Dictionary<string, RawType> {
+            { "flow-mode", new EnumType ("static", "floating") },
+            { "alignment", AlignmentType },
+            { "inner-alignment", AlignmentType },
+            { "scale", new ScaleType () },
+            { "order", new EnumType ("vertical", "horizontal") },
+            { "style", new StringType () },
+            { "appearance", new EnumType ("visible", "locked", "invisible") },
+            { "type", new EnumType (Element.ElementNames.Keys.ToArray ()) },
+            { "name", new StringType () }
         };
 
-        public Queue<string> argQueue = new Queue<string> ();   // TODO: In parser func, refresh, iterate, validate
+        public Queue<string> argQueue = new Queue<string> ();
 
         public void RefreshArgumentQueue () {
-            argQueue = new Queue<string> (ArgumentChecks.Keys);
-        }
-
-        private static bool AlignmentCharacterMatches (string str, params char[] acceptedChars) {
-            bool argsOk = true;
-            foreach (char c in acceptedChars)
-                argsOk = argsOk && str.Contains (c);
-            if (argsOk)
-                return AlignmentMatches (str.Substring (0, str.IndexOf (acceptedChars[0])));
-            else
-                return false;
-        }
-
-        private static bool AlignmentMatches (string str) {
-            bool argsOk;
-            Type vaType = typeof (Element.ElementAlignment.VerticalAlignment);
-            Type haType = typeof (Element.ElementAlignment.HorizontalAlignment);
-            if (str.Contains ('-')) {
-                string[] subargs = str.Split ('-');
-                if (subargs.Length > 2)
-                    throw new FormatException ("Alignment contains invalid number of hyphens");
-                argsOk = vaType.EnumContainsConverted (subargs[0]) && haType.EnumContainsConverted (subargs[1]);
-            }
-            else {
-                argsOk = vaType.EnumContainsConverted (str) || haType.EnumContainsConverted (str);
-            }
-            return argsOk;
+            argQueue = new Queue<string> (ElementArguments.Keys);
         }
     }
 }

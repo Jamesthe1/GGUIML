@@ -41,7 +41,7 @@ namespace GGUIML.AST.Procedures {
             else
                 state.rawTree.AddRoot (state.currentNode);
 
-            state.currentNode.baseArgs = ParseArgs (args.Skip (2).ToArray (), ref state, null, state.currentNode is RawImport); // TODO: Add onDiscard for imports, check types and if the arg can be skipped should they not match
+            state.currentNode.baseArgs = ParseArgs (args.Skip (2).ToArray (), ref state, state.currentNode.baseArgs.Add, state.currentNode is RawImport); // TODO: Add onDiscard for imports, check types and if the arg can be skipped should they not match
         }
     }
 }
