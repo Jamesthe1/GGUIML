@@ -69,10 +69,10 @@ namespace GGUIML {
             { "inner-alignment", AlignmentType },
             { "scale", new ScaleType () },
             { "order", new EnumType ("vertical", "horizontal") },
-            { "style", new StringType () },
+            { "style", new StringType (false) },
             { "appearance", new EnumType ("visible", "locked", "invisible") },
             { "type", new EnumType (Element.ElementNames.Keys.ToArray ()) },
-            { "name", new StringType () }
+            { "name", new StringType (false, false) }
         };
 
         public Queue<string> argQueue = new Queue<string> ();
