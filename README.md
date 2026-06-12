@@ -49,7 +49,7 @@ A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dep
 
 A set is an array of numerics defined with two brackets, comma-separated with optional whitespace. A rect is a set of four, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
+A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted unless otherwise stated, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
 A boolean MUST either be `yes` or `no`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
@@ -74,7 +74,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance-and-references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), asterisk (`*`), and space (` `).
+Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), and asterisk (`*`).
 
 `MODULE`, `TEMPLATE`, and `IMPORT` are reserved for [modular elements](#modular-elements).
 
@@ -122,7 +122,7 @@ The order argument is the sort order of the element's contents, and can be any o
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
-The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [Interpretation](#interpretation)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [reserved characters](#reserved-characters-and-keywords)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
 The appearance argument can be any one of the following, defaulting to `visible`:
 
@@ -137,15 +137,15 @@ The type of element is REQUIRED and can be any one of the following:
 - `label`
 - `textbox`
 - `button`
-- `dropdown`
 - `image`
 - `rect`
 - `graph`
 - `list`
+- `drop-button`
 - `break`
 - `progress`
 
-The name is written as a string, MUST NOT contain special characters (see [interpretation](#interpretation)) or uppercase letters, and MUST be unique to other elements in the file (otherwise an error needs to be raised). This MAY default to a random UUIDv4, but is overall optional to the designer. The default naming method SHOULD be disclosed in the implementation, but it SHOULD NOT be used by the designer. `INHERIT` is invalid.
+The name is written as a single-line string. It MUST NOT contain special characters (see [reserved characters](#reserved-characters-and-keywords)), whitespace, or uppercase letters; and MUST be unique to other elements in the file. This has a default defined by the implementation, which MAY be a UUID v4 as specified in [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122). The default naming method SHOULD NOT be used by the designer, even if disclosed. `INHERIT` is invalid.
 
 ### Element type arguments
 
