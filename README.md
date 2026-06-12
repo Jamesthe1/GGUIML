@@ -55,7 +55,7 @@ A boolean MUST either be `yes` or `no`, representing `true` and `false` in the c
 
 A single-line comment begins with a single hashtag/pound symbol (`#`), whereas hint text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line hint text begins with `##(` and ends with `)##`. Single-line comments and hints may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
 
-An associative array has a series of entries prefixed by an additional indentation, and a hyphen (`-`). They begin with a key, followed by a colon (`:`), and then a value. The following syntax is valid:
+An associative array has a series of entries prefixed by an additional indentation, and a hyphen (`-`). They begin with a string key, followed by a colon (`:`), and then a value. The following syntax is valid:
 
 ```
 items=
@@ -132,6 +132,7 @@ The type of element is REQUIRED and can be any one of the following:
 - `label`
 - `textbox`
 - `button`
+- `dropdown`
 - `image`
 - `rect`
 - `graph`
@@ -176,7 +177,9 @@ The following element types and their arguments are as follows:
 	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
-	- `event`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
+	- `on-click`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
+- `dropdown`: A dropdown list. This element extends from `button` and includes its type arguments as well.
+	- `on-select`: The event to fire when an option is selected. This defaults to an empty string. See [event bus](#Event_bus) for more information.
 - `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, or images are not supported by the program, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists. Newlines are invalid.
 	- `offline-path`: The location of the image, only on the disk. This defaults to an empty string, used as fallback for offline content. Newlines are invalid.
