@@ -45,7 +45,7 @@ A numeric is either:
 
 A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second parameter to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then an integer.
 
-A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed.
+A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed. The `z` axis faces positive towards the viewer.
 
 A set is an array of numerics defined with two brackets, comma-separated with optional whitespace. A rect is a set of four, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
 
