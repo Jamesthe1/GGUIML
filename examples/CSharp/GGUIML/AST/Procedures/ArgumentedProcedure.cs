@@ -13,7 +13,7 @@ namespace GGUIML.AST.Procedures {
 
             args.ForEachIter ((arg, argPos) => {
                 IRawArgument rawArgument;
-                if (arg.Contains ('@') || arg.Contains ('$') || arg.StartsWith ("INHERIT")) {   // TODO: Ignore these characters if in a string
+                if (arg.NoQuotesContains ('@') || arg.NoQuotesContains ('$') || arg.StartsWith ("INHERIT")) {
                     Console.WriteLine ("REFERENCE: " + arg);
                     if (!assignable)
                         throw new GUILParseException ("Argument references are not allowed for this type", lineNum);
@@ -50,10 +50,8 @@ namespace GGUIML.AST.Procedures {
                     rawArgument.Name = arg;
                     parsedArgs.Add (rawArgument);
                 }
-                else if (rawArgument is RawReference) { // Nameless references are okay to keep; we will only reach this condition if assignments are allowed
-                    Console.WriteLine ("ASSUMING NAME: " + arg);
-                    rawArgument.Data = arg;
-                    parsedArgs.Add (rawArgument);
+                else if (rawArgument is RawReference) {
+                    throw new GUILParseException ("Invalid implicit assignment of variable reference", lineNum);
                 }
                 else {
                     Console.WriteLine ("DISCARDING: " + arg);
