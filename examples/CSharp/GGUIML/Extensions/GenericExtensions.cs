@@ -174,5 +174,19 @@ namespace GGUIML.Extensions {
         public static bool NoQuotesContains (this string value, string separator) {
             return value.NoQuotesFindIndex (separator) != -1;
         }
+
+        public static string[] NoQuotesSplit (this string value, params char[] separator) {
+            List<string> strings = new List<string> { value };
+            int idx;
+            while ((idx = strings.Last ().NoQuotesFindIndex (separator)) != -1) {
+                string lastStr = strings.Last ();
+                strings[strings.Count - 1] = lastStr.Substring (0, idx);
+
+                lastStr = lastStr.Substring (idx + 1);
+                if (lastStr != "")  // We don't want empty data in our split
+                    strings.Add (lastStr);
+            }
+            return strings.ToArray ();
+        }
     }
 }
