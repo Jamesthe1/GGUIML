@@ -22,7 +22,7 @@ A text file for the language starts with `!GGUIML` and a newline afterward; and 
 
 The language is case-sensitive except for element names. If the implementation exposes an API, element names are RECOMMENDED to be lowercase. Uppercase file paths SHOULD throw a warning to the designer, as this may result in undesired behavior on case-sensitive file systems.
 
-The topmost element is the container; this is the window of the application itself, or display, or module file depending on the program and its environment. It MAY have no parent, but the implementation or program SHOULD document if it does have one.
+The topmost element is the container; this is the window of the application itself, or display, or module file depending on the program and its environment. It MAY have no parent.
 
 Indentation MAY either be tab characters OR spaces. There MUST NOT be any mixed whitespace for indentation. Empty lines are ignored.
 
@@ -47,7 +47,7 @@ A scale is two numerics separated by a lowercase `x`, no whitespace. A special k
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed.
 
-A rect is an array of four numerics, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
+A set is an array of numerics defined with two brackets, comma-separated with optional whitespace. A rect is a set of four, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
 
 A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
 
@@ -55,7 +55,7 @@ A boolean MUST either be `yes` or `no`, representing `true` and `false` in the c
 
 A single-line comment begins with a single hashtag/pound symbol (`#`), whereas hint text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line hint text begins with `##(` and ends with `)##`. Single-line comments and hints may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
 
-An associative array has a series of entries prefixed by an additional indentation, and a hyphen (`-`). They begin with a string key, followed by a colon (`:`), and then a value. The following syntax is valid:
+An associative array has a series of entries prefixed by an indentation, and a hyphen (`-`). They begin with a string key, followed by a colon (`:`), and then a value. The following syntax is valid:
 
 ```
 items=
@@ -84,23 +84,28 @@ An implementation uses the following syntax for declaring an element:
 
 ```
 ## Hint text
-alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
+flow-mode alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
 ```
 
 All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context. Double assignment of an argument MUST present a warning.
 
 Hint text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within hint text. `INHERIT` is invalid.
 
+The following flow-modes are available, and defaults to `static` unless otherwise specified:
+
+- `static`: The subsequent element will be positioned after this element, depending on the order.
+- `floating`: The subsequent element's placement ignores this one. `1` is automatically added to the `z` position.
+
 The following alignments are available:
 
 - Vertical:
-	- top
-	- center
-	- bottom
+	- `top`
+	- `center`
+	- `bottom`
 - Horizontal:
-	- left
-	- center
-	- right
+	- `left`
+	- `center`
+	- `right`
 
 An alignment is typed as `vertical-horizontal`. The alignment defaults to `INHERIT` (or `center-center` if the topmost element) and can be omitted when no position or margin/padding is defined. Additionally, if one part of the alignment is defined, the other side of the alignment can be omitted (e.g. `left` translates to `center-left`, and `top` translates to `top-center`).
 
@@ -157,7 +162,7 @@ The following syntax is invalid:
 
 The following element types and their arguments are as follows:
 
-- `window`: A panel that contains various contents. If a child of another element, it is restricted to its parent's boundaries. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type arguments as well.
+- `window`: A panel that contains various contents. `flow-mode` defaults to `floating`. If a child of another element, it is restricted to its parent's boundaries. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type arguments as well.
 	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `yes`, where it defaults to an empty string. `INHERIT` is invalid.
 	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `no`.
 	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `no`.
@@ -178,8 +183,6 @@ The following element types and their arguments are as follows:
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
 	- `on-click`: The event to fire when interacted with, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information.
-- `dropdown`: A dropdown list. This element extends from `button` and includes its type arguments as well.
-	- `on-select`: The event to fire when an option is selected. This defaults to an empty string. See [event bus](#Event_bus) for more information.
 - `image`: An image to be presented to the user. Image acquisition is OPTIONAL for an implementation, but this SHOULD be documented by the implementation. If an error is encountered when acquiring an image, or images are not supported by the program, the program or implementation SHOULD provide an error to the user. A designer SHOULD NOT use this as a full background to any element, as backgrounds should be defined by the program's style.
 	- `path`: The location of the image, which may either be on the disk, or an HTTP(S) URL. This is REQUIRED to the designer, but if a URL is present and offline content is enforced, then the implementation or program MUST use `offline-path` if it exists. Newlines are invalid.
 	- `offline-path`: The location of the image, only on the disk. This defaults to an empty string, used as fallback for offline content. Newlines are invalid.
@@ -189,13 +192,16 @@ The following element types and their arguments are as follows:
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `no`.
 - `graph`: A display with given data points, displayed as determined by the program style.
 	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
-- `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table.
-	- `mode`: How the list is presented and interaction is determined. The following options are available and defaults to `INHERIT`:
+- `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table. This element extends from `label`, and `button` if interactable, and includes their type arguments as well.
+	- `mode`: How the list is presented and interaction is determined. If a type argument is not valid for a given mode, and it is used anyways, a warning SHOULD be presented to the designer. The following options are available and defaults to `INHERIT`:
 		- `ordered`: Numbers, letters, roman numerals, any as specified by the program and style.
 		- `unordered`: Bullet points, squares, any as specified by the program and style.
 		- `radio`: Multiple options, one selection. If a child radio is selected, it will also make its parent selected.
 		- `checkbox`: Multiple options, multiple selections. If a child checkbox is selected, it will also make its parent selected.
-	- `start-selected`: A boolean of whether or not this option starts selected. Only available for `radio` and `checkbox` lists, and the implementation SHOULD present a warning to the designer if multiple `radio` options have `start-selected` to `on`. A warning SHOULD be presented to the designer if this option is not applicable to the given mode.
+	- `start-selected`: A string of the name for which item in the list starts selected. Only available for `radio` and `checkbox` lists.
+	- `dropdown`: A boolean of whether or not its children are collapsable, defaults to `no`. Children will start `invisible`. Only available for `radio` and `checkbox` lists.
+	- `on-select`: The event to fire when an option is selected, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information. Only available for `radio` and `checkbox` lists.
+- `drop-button`: A dropdown button that reveals its children when selected. The first child will act as the button while the rest will have their visibility hidden. This element extends from `button` and includes its type arguments as well.
 - `break`: An intentional break in the ordering of elements. This forces sorted items after this element to move across to the next available row/column. It MAY be presented with a horizontal rule by the program, or an explicit element representing the rule can be added by the designer; each approach is valid depending on one's use case.
 - `progress`: A progress bar that fills in a direction given by the program style.
 	- `value`: The value, as a percent.
@@ -246,7 +252,7 @@ A variable can be referenced with the following syntax:
 $element:@variable-name		# Explicit reference to an element's argument
 ```
 
-`INHERIT` is invalid to the declaration of any variable references. Variable references, when placed as element arguments, are resolved only as a named argument, and cannot be inferred; if the variable reference's name matches an argument name, this is the only case where prefixing with the name can be excluded, as it will assume the it applies to the argument of the same name.
+`INHERIT` is invalid to the declaration of any variable references. Variable references, when placed as element arguments, are resolved only as a named argument, and cannot be inferred.
 
 A variable or element reference can be expanded multiple times with curly brackets (`{` and `}`). The following example will first resolve `@variable`, then the outer reference:
 
@@ -254,7 +260,7 @@ A variable or element reference can be expanded multiple times with curly bracke
 @TYPEARG.{@variable}
 ```
 
-Variables will always resolve to strings in this manner, until the final reference has been acquired. Attempting to resolve a variable or element name with a special character is not allowed. A limit to multi-expansion is RECOMMENDED to be defined by the implementation or program, and SHOULD be documented.
+Variables will always resolve to strings in this manner, until the final reference has been acquired. Attempting to resolve a variable or element name with a special character is not allowed. A limit to multi-expansion is RECOMMENDED to be defined by the implementation or program.
 
 All variable references are possible to resolve in parsed strings. An element reference will resolve into its name in a parsed string. A variable may be further encased in curly brackets to better indicate inline parsing:
 
@@ -314,7 +320,7 @@ IMPORT $namespace:$module-name
 IMPORT $nested.namespace:$module-name
 ```
 
-Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, variable references that match names will automatically fill that argument, and named arguments are allowed.
+Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, and named arguments are allowed.
 
 To import a module from another file, the `IMPORT` keyword is used with the following syntax (extension is REQUIRED):
 
@@ -361,4 +367,4 @@ All parser errors are intended to be visible to the designer. Therefore, a progr
 
 Because this is a windowed system, a program MAY provide the user with a bar that contains minimized and present windows. A window SHOULD NOT be a required container for the designer.
 
-For any SHOULD NOT, a warning SHOULD be given to its intended recipient.
+For any SHOULD NOT, a warning SHOULD be given to its intended recipient. For any decisions that are made when this specification provides an option, documentation SHOULD be provided.
