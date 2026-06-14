@@ -67,12 +67,12 @@ namespace GGUIML {
             { "flow-mode", new EnumType ("static", "floating") },
             { "alignment", AlignmentType },
             { "inner-alignment", AlignmentType },
-            { "scale", new ScaleType () },
+            { "scale", new ScaleType (typeof(NumericInt), typeof(NumericDecimal), typeof(NumericFlag)) },
             { "order", new EnumType ("vertical", "horizontal") },
-            { "style", new StringType (false) },
+            { "style", new StringType (multiline: false, allowSpecial: false) },
             { "appearance", new EnumType ("visible", "locked", "invisible") },
             { "type", new EnumType (Element.ElementNames.Keys.ToArray ()) },
-            { "name", new StringType (false, false) }
+            { "name", new StringType (false, false, false) }
         };
 
         public Queue<string> argQueue = new Queue<string> ();

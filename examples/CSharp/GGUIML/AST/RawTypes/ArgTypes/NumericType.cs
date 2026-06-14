@@ -9,21 +9,25 @@ namespace GGUIML.AST.Types {
         public override string TypeName => "numeric";
 
         public NumericType () {}
-        public NumericType (Type[] restrictions) {
+        public NumericType (params Type[] restrictions) {
             Restrictions = restrictions;
         }
 
         public override bool CanParse (string data) {
             try {
                 INumeric result = data.ParseNumeric ();
-                if (Restrictions.Length == 0)
-                    return true;
-                
-                return Restrictions.Contains (result.GetType ());
+                return MatchesRestrictions (result);
             }
             catch (FormatException) {
                 return false;
             }
+        }
+
+        public bool MatchesRestrictions (INumeric numeric) {
+            if (Restrictions.Length == 0)
+                    return true;
+                
+            return Restrictions.Contains (numeric.GetType ());
         }
     }
 }
