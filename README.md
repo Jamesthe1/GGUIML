@@ -43,7 +43,7 @@ A numeric is either:
 - Decimals, which include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
-A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second parameter to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then an integer.
+A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second parameter to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then a numeric. The allowed numerics is dependent on the variable.
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed. The `z` axis faces positive towards the viewer.
 
@@ -74,7 +74,7 @@ A special keyword, `INHERIT`, MUST inherit the value of its parent if no referen
 
 A variable reference MUST be an option for all variables. See [inheritance and references](#inheritance-and-references) for more information.
 
-Special characters MUST NOT be used in any names that elements in the language may reference, even when escaped. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:` and `;`), and asterisk (`*`).
+Special characters MUST NOT be used in any names that elements in the language may reference. In parsed text, this is only detected after the parsing is complete. These are `$` and `@` ([inheritance and references](#inheritance-and-references)), square brackets (`[` and `]`), curly brackets (`{` and `}`), quotes (`'` and `"`), backslash (`\`), punctuation marks (`.`, `?`, and `!`, from [Inheritance and references](#inheritance-and-references); `:`, `;`, and `,`), and asterisk (`*`).
 
 `MODULE`, `TEMPLATE`, and `IMPORT` are reserved for [modular elements](#modular-elements).
 
@@ -115,7 +115,7 @@ The offset position can be defined, written as a point. Any numeric is accepted,
 
 The inner alignment regards the alignment that will be inherited, the padding describes the inner spacing away from the boundaries and is typed similarly to margin, and the position describes the base offset that other elements will start from. These follow the same definition rules as above. When inferring this argument's context, the original alignment MUST be defined.
 
-The scale is written as a scale, where any numeric is accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
+The scale is written as a scale, where integers, percentages, and `DYNAMIC` are accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
 The order argument is the sort order of the element's contents, and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
 
