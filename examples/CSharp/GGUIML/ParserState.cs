@@ -29,7 +29,7 @@ namespace GGUIML {
 
         public RawNode currentNode = null;
 
-        public IRawArgument currentArgument = null; // TODO: If set and InterpMode is String or PureString, add to the data. Once a specified endpoint is met, set this to null and interpMode to None.
+        public IRawArgument currentArgument = null;
 
         public string storedHintText = "";
 

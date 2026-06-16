@@ -69,6 +69,8 @@ namespace GGUIML.AST.Procedures {
             return parsedArgs;
         }
 
+        // TODO: Find unclosed strings, change interp mode to String or PureString
+
         public override bool MustTerminateLine (string lineState, ParserState state) {
             return true;
         }
