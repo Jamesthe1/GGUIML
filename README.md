@@ -30,7 +30,7 @@ If a feature or element is unavailable in a given API, it MUST be discarded and 
 
 The implementation or program MAY include an option to "enforce offline content," which prevents the usage of URLs to acquire content.
 
-For any argument with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any argument that is excluded by the implementation, if permitted by this document, SHOULD be documented.
+For any variable with a default, it is implied OPTIONAL for the designer, unless otherwise stated. Any variable that is excluded by the implementation, if permitted by this document, SHOULD be documented.
 
 Most text that is displayed supports a very basic form of Markdown: `**` for bold, `*` or `_` for emphasized/italic text, and `__` for underline. All characters presented must surround text to take effect.
 
@@ -43,7 +43,7 @@ A numeric is either:
 - Decimals, which include a decimal point.
 - `DYNAMIC`, a special keyword used to indicate that this item is flexible.
 
-A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second parameter to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then a numeric. The allowed numerics is dependent on the variable.
+A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second variable to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then a numeric. The allowed numerics is dependent on the variable.
 
 A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed. The `z` axis faces positive towards the viewer.
 
@@ -87,7 +87,7 @@ An implementation uses the following syntax for declaring an element:
 flow-mode alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
 ```
 
-All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first argument by context. Double assignment of an argument MUST present a warning.
+All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first variable by context. Double assignment of a variable MUST present a warning.
 
 Hint text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within hint text. `INHERIT` is invalid.
 
@@ -117,14 +117,14 @@ The inner alignment regards the alignment that will be inherited, the padding de
 
 The scale is written as a scale, where integers, percentages, and `DYNAMIC` are accepted and defaults to pixels. This is REQUIRED, unless otherwise stated. `INHERIT` is invalid.
 
-The order argument is the sort order of the element's contents, and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
+The order variable is the sort order of the element's contents, and can be any one of the following, defaulting to `horizontal` unless otherwise specified:
 
 - `vertical`: Organizes its contents vertically first until it encounters an element or endpoint, where it will then return to the first element and extend once horizontally. This will continue up to a horizontal endpoint or reaching an element horizontally.
 - `horizontal`: Organizes its contents horizontally first until it encounters an element or endpoint, where it will then return to the first element and extend once vertically. This will continue up to a vertical endpoint or reaching an element vertically.
 
-The style argument is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [reserved characters](#reserved-characters-and-keywords)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
+The style variable is a string that refers to one or more styles provided by the program; they are separated by a comma (within the string), any whitespace is allowed except newlines, and special characters are not allowed for a valid style name even when escaped (see [reserved characters](#reserved-characters-and-keywords)). This defaults to `'default'` for the entire container, or `INHERIT` if it is a child element.
 
-The appearance argument can be any one of the following, defaulting to `visible`:
+The appearance variable can be any one of the following, defaulting to `visible`:
 
 - `visible`: Presents its contents/children and allows interaction. This MUST NOT override the appearance of its children. This is the default.
 - `locked`: Presents its contents/children but MUST NOT allow any interaction for itself or any child.
@@ -160,9 +160,9 @@ The following syntax is invalid:
 	TYPEARG event='start_music'	# This produces a syntax error, because it is not the first line.
 ```
 
-The following element types and their arguments are as follows:
+The following element types and their variables are as follows:
 
-- `window`: A panel that contains various contents. `flow-mode` defaults to `floating`. If a child of another element, it is restricted to its parent's boundaries. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type arguments as well.
+- `window`: A panel that contains various contents. `flow-mode` defaults to `floating`. If a child of another element, it is restricted to its parent's boundaries. When it or its children are interacted with, the window SHOULD be brought to the front of all other elements on its z-index. This element extends from `rect` and includes its type variables as well.
 	- `header`: Text that appears on top, as a string. This is REQUIRED to the designer, unless `headerless` is set to `yes`, where it defaults to an empty string. `INHERIT` is invalid.
 	- `minimizable`: Boolean for whether or not the window can be minimized (made invisible). This defaults to `no`.
 	- `maximizable`: Boolean for whether or not the window can be maximized (expanded to `100%x100%`). This defaults to `no`.
@@ -178,7 +178,7 @@ The following element types and their arguments are as follows:
 	- `text`: Text of the label, as a string. This defaults to an empty string.
 	- `font-size`: The size of the font, as a numeric. Integers and decimals are treated as font points, and defaults to the style's font size. The actual font MUST be defined in the style.
 	- `justified`: Boolean that overrides text alignment behavior. The text aligned with the left side, and letter/word spacing is adjusted to be flush with both left and right sides of the element. Vertical alignment is not affected. `DYNAMIC` is invalid for the width of this element if this is set to `yes`.
-- `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type arguments as well.
+- `textbox`: An input field containing text. Scale can be omitted by the designer, and it defaults to `100%xDYNAMIC`. This element extends from `label` and includes its type variables as well.
 	- `empty-text`: Text that appears when the box is empty, as a string. This defaults to an empty string.
 	- `max-lines`: The maximum number of lines a user may add, only as an integer. This defaults to `1`. `DYNAMIC` SHOULD allow indefinite lines, and MUST present a scroll bar on any axis if the input expands beyond the given scale.
 - `button`: An interactable button that fires an event. Scale can be omitted by the designer, and it defaults to `DYNAMICxDYNAMIC`.
@@ -192,8 +192,8 @@ The following element types and their arguments are as follows:
 	- `scrollable`: Boolean whether or not scroll bars are to be placed accordingly by the program, if the inner scale exceeds the scale of this element; if the inner scale is smaller, the scroll bars SHOULD be disabled. Defaults to `no`.
 - `graph`: A display with given data points, displayed as determined by the program style.
 	- `data`: An associative array of string keys (no special characters allowed), and numeric or point values. Numerics, and numerics of points, can be any number except `DYNAMIC`. The designer MAY create a nested associative array, with names for each plot.
-- `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table. This element extends from `label`, and `button` if interactable, and includes their type arguments as well.
-	- `mode`: How the list is presented and interaction is determined. If a type argument is not valid for a given mode, and it is used anyways, a warning SHOULD be presented to the designer. The following options are available and defaults to `INHERIT`:
+- `list`: A list enumerating its child elements. Can be nested. Sort order defaults to `vertical`, and `horizontal` elements are RECOMMENDED to be aligned akin to a table. This element extends from `label`, and `button` if interactable, and includes their type variables as well.
+	- `mode`: How the list is presented and interaction is determined. If a type variable is not valid for a given mode, and it is used anyways, a warning SHOULD be presented to the designer. The following options are available and defaults to `INHERIT`:
 		- `ordered`: Numbers, letters, roman numerals, any as specified by the program and style.
 		- `unordered`: Bullet points, squares, any as specified by the program and style.
 		- `radio`: Multiple options, one selection. If a child radio is selected, it will also make its parent selected.
@@ -201,7 +201,7 @@ The following element types and their arguments are as follows:
 	- `start-selected`: A string of the name for which item in the list starts selected. Only available for `radio` and `checkbox` lists.
 	- `dropdown`: A boolean of whether or not its children are collapsable, defaults to `no`. Children will start `invisible`. Only available for `radio` and `checkbox` lists.
 	- `on-select`: The event to fire when an option is selected, as a string. This defaults to an empty string. See [event bus](#Event_bus) for more information. Only available for `radio` and `checkbox` lists.
-- `drop-button`: A dropdown button that reveals its children when selected. The first child will act as the button while the rest will have their visibility hidden. This element extends from `button` and includes its type arguments as well.
+- `drop-button`: A dropdown button that reveals its children when selected. The first child will act as the button while the rest will have their visibility hidden. This element extends from `button` and includes its type variables as well.
 - `break`: An intentional break in the ordering of elements. This forces sorted items after this element to move across to the next available row/column. It MAY be presented with a horizontal rule by the program, or an explicit element representing the rule can be added by the designer; each approach is valid depending on one's use case.
 - `progress`: A progress bar that fills in a direction given by the program style.
 	- `value`: The value, as a percent.
@@ -247,12 +247,19 @@ The colon MUST be omitted if there is no reference defined, and defaults to the 
 A variable can be referenced with the following syntax:
 
 ```
-@variable-name				# Relative reference to parent element's arguments (or module arguments, which take priority over relative references)
-@TYPEARG.variable-name		# Relative reference to parent element's type argument
-$element:@variable-name		# Explicit reference to an element's argument
+@variable-name				# Relative reference to parent element's variables (or module variables, which take priority over relative references)
+@TYPEARG.variable-name		# Relative reference to parent element's type variables
+$element:@variable-name		# Explicit reference to an element's variables
 ```
 
-`INHERIT` is invalid to the declaration of any variable references. Variable references, when placed as element arguments, are resolved only as a named argument, and cannot be inferred.
+`INHERIT` is invalid to the declaration of any variable references. Variable references, when placed as element arguments, are resolved only as a named argument, and cannot be inferred. The only exception is if the variable name matches exactly without expansion. The following example demonstrates what is valid:
+
+```
+label 'one'
+	TYPEARG @text				# Valid
+@scale label 'two'				# Valid
+	TYPEARG $one:@TYPEARG.text	# Invalid -- Element and typearg reference makes a longer name
+```
 
 A variable or element reference can be expanded multiple times with curly brackets (`{` and `}`). The following example will first resolve `@variable`, then the outer reference:
 
@@ -297,10 +304,14 @@ An implementation MUST resolve types for references. If an invalid type is given
 A designer can split their UI into multiple reusable elements. This is defined with the special `MODULE` keyword, and can be defined as a child of any element or in its own separate file. The syntax is as follows:
 
 ```
-MODULE module-name argument-names
+MODULE module-name variable-names
 ```
 
-The module name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters. Argument names are space-separated, can be suffixed by `?` to make optional (where it becomes a default value if left blank), and can be accessed through reference syntax. Argument types are inferred by where they are placed, and will find a matching variable name if placed alone. Arguments from modules override relative references. See [inheritance and references](#inheritance-and-references) for more information.
+The module name is a string; MUST be unique to other modules in scope; and MUST NOT contain special characters, whitespace, or uppercase letters. Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Variable names are space-separated.
+
+In the variable list, a variable can be suffixed by `?` to make optional (where it becomes a default value if left blank). Variable types are inferred by where they are placed using the most common type, and can be inferred. Variables from modules override relative references.
+
+Module variables can be accessed through reference syntax. See [inheritance and references](#inheritance-and-references) for more information.
 
 Modules can be placed as children to a `NAMESPACE` keyword with the following syntax:
 
@@ -308,25 +319,23 @@ Modules can be placed as children to a `NAMESPACE` keyword with the following sy
 NAMESPACE namespace-name
 ```
 
-The namespace name is a string, MUST be unique to other modules in scope, and MUST NOT contain special characters or uppercase letters.
+The namespace name is a string; MUST be unique to other modules in scope; and MUST NOT contain special characters, whitespace, or uppercase letters.
 
-Namespaces can be children of other namespaces, but MUST NOT be children of modules.
+Namespaces can be children of other namespaces, but MUST NOT be children of modules. Subsequent namespaces and modules may be accessed using the dot (`.`) operator.
 
 A module MUST NOT deploy any elements without an `IMPORT` declaration. To access a module in the same file, the `IMPORT` keyword is used with the following syntax:
 
 ```
 IMPORT $module-name
-IMPORT $namespace:$module-name
-IMPORT $nested.namespace:$module-name
 ```
 
-Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, and named arguments are allowed.
+Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, named arguments are allowed, and variable inference is based on type.
 
 To import a module from another file, the `IMPORT` keyword is used with the following syntax (extension is REQUIRED):
 
 ```
 IMPORT $disk/path/to/file.ggui:$module-name	# Explicit inclusion
-IMPORT $disk/path/to/file.ggui				# Implicit inclusion; modules are treated as part of this scope
+IMPORT $disk/path/to/file.ggui				# Implicit inclusion; modules and namespaces are treated as part of this scope
 ```
 
 This is only valid if the module is at the root of the file. Module definitions, namespaces, and imports are scope-bound to their parent element. This means that this would be invalid:
@@ -349,12 +358,10 @@ However, this is valid, because modules and namespaces are not elements:
 	IMPORT $buttons:$large-button 'play_button' 'PLAY' 'launch_game'
 ```
 
-When importing, any module arguments are to be placed after the module reference. Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Likewise, references to variables and named elements cannot be accessed by `IMPORT`.
-
 References and inheritance in modules MUST be resolved before they are implemented. If post-resolution is desired, the `TEMPLATE` keyword is available with the following syntax:
 
 ```
-TEMPLATE template-name argument-names
+TEMPLATE template-name variable-names
 ```
 
 This behaves similarly to `MODULE` and may be imported the same way. The only difference is that relative variable references and inheritance are resolved after the template has been inserted.
