@@ -36,26 +36,31 @@ Most text that is displayed supports a very basic form of Markdown: `**` for bol
 
 ### Types
 
-A numeric is either:
+A numeric (type name `numeric`) is either:
 
-- Integers which contain no suffix, also referred to as "pixels."
-- Percentages which are suffixed with `%`, and the designer can include a decimal point.
-- Decimals, which include a decimal point.
-- `DYNAMIC`, a special keyword used to indicate that this item is flexible.
+- Integers which contain no suffix, also referred to as "pixels." (`int` as argument)
+- Percentages which are suffixed with `%`, and the designer can include a decimal point. (`percent` as argument)
+- Decimals, which include a decimal point. (`decimal` as argument)
+- `DYNAMIC`, a special keyword used to indicate that this item is flexible. (`flag` as argument)
 
-A scale is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second variable to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then a numeric. The allowed numerics is dependent on the variable.
+A scale (type name `scale`) is two numerics separated by a lowercase `x`, no whitespace. A special keyword, `SQUARE`, may substitute only either the first or second variable to make the element have equal height and width; it may be suffixed with an asterisk (`*`) and then a numeric. The allowed numerics is dependent on the variable. When defining the type, numeric type restrictions may be passed in as arguments.
 
-A point is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed. The `z` axis faces positive towards the viewer.
+A point (type name `point`) is either a numeric of `(x,y)` or `(x,y,z)`. The allowed numerics is dependent on the variable. Whitespace is allowed. The `z` axis faces positive towards the viewer. When defining the type, numeric type restrictions may be passed in as arguments.
 
-A set is an array of numerics defined with two brackets, comma-separated with optional whitespace. A rect is a set of four, written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number.
+A set (type name `set`) is an array of numerics defined with two brackets, comma-separated with optional whitespace. A rect is a set of four (`set(4)`), written as `[top, right, down, left]`. A shorter version, `[top-down, left-right]` exists, and `[n]` sets all fields with a single number. When defining the type, a single number may be passed in as an argument to define the set length.
 
-A string is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. Newlines are permitted unless otherwise stated, indentation is subtracted by element depth. Strings are indexable to the designer by line count via the dot operator `.n`, but the string MUST NOT be indexable further. If empty lines are omitted by the implementation, it MUST preserve each line's index.
+A string (type name `string`) is either surrounded by single-quotes (`'`) which refer to un-parsed text, or double-quotes (`"`) which refer to parsed text. The escape character `\` conforms to ISO C escape sequences (except for carriage return, which is excluded), and also escapes special characters in this language only if it is present in double-quotes. The following options for this type are available:
+- Newlines are permitted unless otherwise stated (`single` as argument), indentation is subtracted by element depth. If it is a single-line string, indexing the string is not permitted.
+- Whitespace is permitted unless otherwise stated (`no-whitespace` as argument).
+- Special characters are allowed unless otherwise stated (`no-special` as argument).
 
-A boolean MUST either be `yes` or `no`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
+Strings are indexable to the designer by line count via the dot operator `.n` (starting from `0`), which returns a single-line string. Empty lines MUST still contribute to the overall number of lines, and preserve the indices of other lines.
 
-A single-line comment begins with a single hashtag/pound symbol (`#`), whereas hint text begins with two (`##`). A multi-line comment begins with `#(` and ends with `)#`, and a multi-line hint text begins with `##(` and ends with `)##`. Single-line comments and hints may also be chained together to form a multi-line version, but empty lines without any single-line indicator MUST be counted as a break.
+A boolean (type name `bool`) MUST either be `yes` or `no`, representing `true` and `false` in the context of a UI. The intent is to better present features rather than states.
 
-An associative array has a series of entries prefixed by an indentation, and a hyphen (`-`). They begin with a string key, followed by a colon (`:`), and then a value. The following syntax is valid:
+A single-line comment begins with a single hashtag/pound symbol (`#`), whereas a multi-line comment begins with `#(` and ends with `)#`.
+
+An associative array (type name `array`) has a series of entries prefixed by an indentation, and a hyphen (`-`). They begin with a string key, followed by a colon (`:`), and then a value (any type as argument). The following syntax is valid:
 
 ```
 items=
@@ -66,7 +71,21 @@ items=
 
 The value of an entry in an associative array is accessible via the dot operator `.key`. If there are multiple keys of the same name, all entries MUST be given as an indexable array.
 
-All types are explicitly defined by their variables. If an argument does not match the specified type, the implementation or program MUST give an error to the designer.
+An enum (type name `enum`) is a list of choices. Instead of a string, this allows a finite number of options for the designer. When defining the type, a list of options, or groups of options encased in brackets (`[]`), may be provided as arguments. Note that hyphens (`-`) are not allowed within groups, as this defines chaining selections. A group can be suffixed by `?` to make optional (where it becomes empty if left blank); if all groups are optional, but the variable is not, at least one argument must be provided. Nested groups are not allowed, and the mixing of groups with single options is not allowed. Variables with groups may be indexed with the dot operator `.n`, where `n` is the group index (starting from `0`). The following would be a valid enum declaration with arguments:
+
+```
+enum([alpha, beta, gamma]?, [i, ii, iii, iv]?)	# Valid arguments include "alpha-iii", "gamma", or "ii"
+```
+
+If one or more types are allowed, it is defined as a multi-type (type name `multi`). When defining the type, any number of sub-types may be passed in as arguments.
+
+All types are either explicitly or implicitly defined by their variables. An alias may optionally be created, available to all modules and children under its parent:
+
+```
+TYPEALIAS alias-name type-def
+```
+
+When creating type hints for variables in [modular elements](#modular-elements), the appropriate keywords that appear above are used. If a type has specific forms of itself, whether as a filter or to provide specific options, parentheses (`()`) may be used directly after the type with a comma-separated list of arguments or choices, whitespace but no newlines allowed. If an alias already has arguments in its type definition, and parentheses are used on the alias, those arguments will be appended.
 
 ### Reserved characters and keywords
 
@@ -87,9 +106,9 @@ An implementation uses the following syntax for declaring an element:
 flow-mode alignment[margin](position) inner-alignment[padding](inner-position) scale order style appearance type name
 ```
 
-All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first variable by context. Double assignment of a variable MUST present a warning.
+All arguments, except for hint text, margin/padding, and positions, can be preceded with their name to either change the argument's position, or to more clearly demonstrate their intended context; otherwise, it MUST be interpreted as the first variable by context. Double assignment of a variable MUST present a warning, and if a named argument does not match the variable's type, the implementation or program MUST give an error to the designer.
 
-Hint text MAY either appear as a tooltip OR at the bottom of the window. Indentation MUST match the succeeding element. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within hint text. `INHERIT` is invalid.
+Hint text MAY either appear as a tooltip, or at the bottom of the window. Indentation MUST match the succeeding element, and cannot be declared without the presence of an element succeeding it. The inner text is parsed as markdown; the depth of the supported markdown is up to the implementation, and SHOULD be documented. The program may choose not to support this, and this is not required to the designer. Comments MUST NOT appear within hint text. Single-line hint texts begin with a double hashtag (`##`) and may also be chained together to form a multi-line version, but explicit multi-line declarations (created with `##(` and `)##`) may not be chained together or mixed with single-line. `INHERIT` is invalid.
 
 The following flow-modes are available, and defaults to `static` unless otherwise specified:
 
@@ -309,7 +328,7 @@ MODULE module-name variable-names
 
 The module name is a string; MUST be unique to other modules in scope; and MUST NOT contain special characters, whitespace, or uppercase letters. Module references are special, in that they cannot be referenced by other elements or variables; only imports can refer to them. Variable names are space-separated.
 
-In the variable list, a variable can be suffixed by `?` to make optional (where it becomes a default value if left blank). Variable types are inferred by where they are placed using the most common type, and can be inferred. Variables from modules override relative references.
+In the variable list, variables from modules override relative references. A variable can be suffixed by `?` to make optional (where it becomes a default value if left blank). Variable types are inferred by where they are placed using the most common type, unless given a type hint using the colon operator (`:`), followed by the argument type. See [types](#types) for more information.
 
 Module variables can be accessed through reference syntax. See [inheritance and references](#inheritance-and-references) for more information.
 
