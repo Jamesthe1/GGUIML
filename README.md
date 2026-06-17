@@ -87,6 +87,8 @@ TYPEALIAS alias-name type-def
 
 When creating type hints for variables in [modular elements](#modular-elements), the appropriate keywords that appear above are used. If a type has specific forms of itself, whether as a filter or to provide specific options, parentheses (`()`) may be used directly after the type with a comma-separated list of arguments or choices, whitespace but no newlines allowed. If an alias already has arguments in its type definition, and parentheses are used on the alias, those arguments will be appended.
 
+The only allowed type conversion is through strings. An [element reference](#inheritance-and-references) will resolve into its name when turned into a string.
+
 ### Reserved characters and keywords
 
 A special keyword, `INHERIT`, MUST inherit the value of its parent if no reference is defined (see [inheritance and references](#inheritance-and-references) for more information), and is available for all arguments unless otherwise stated. In the event that `INHERIT` is not applicable, the implementation MUST give an error.
@@ -255,7 +257,7 @@ References are applicable as arguments. See [inheritance and references](#inheri
 
 ### Inheritance and references
 
-When using `INHERIT`, an element reference can be given by the designer. This is identified by the special character `$`. Inheritance uses the following syntax:
+`INHERIT` is a special reference keyword that is only valid to declare with named arguments. When using `INHERIT`, an element reference can be given by the designer. This is identified by the special character `$`. Inheritance uses the following syntax:
 
 ```
 INHERIT:$element
@@ -280,15 +282,16 @@ label 'one'
 	TYPEARG $one:@TYPEARG.text	# Invalid -- Element and typearg reference makes a longer name
 ```
 
-A variable or element reference can be expanded multiple times with curly brackets (`{` and `}`). The following example will first resolve `@variable`, then the outer reference:
+A variable or element reference can be encased with curly brackets (`{` and `}`) to separate it from the rest of the text, and can be placed in a variable to permit multiple expansions. The curly brackets convert the data inside it into an unparsed string. The following example will first resolve `@variable`, then the outer reference:
 
 ```
-@TYPEARG.{@variable}
+# variable could be assigned anything, but for this example it is set to "text"
+@TYPEARG.{@variable}	# First it resolves to @TYPEARG.text, then it attempts to resolve that variable
 ```
 
 Variables will always resolve to strings in this manner, until the final reference has been acquired. Attempting to resolve a variable or element name with a special character is not allowed. A limit to multi-expansion is RECOMMENDED to be defined by the implementation or program.
 
-All variable references are possible to resolve in parsed strings. An element reference will resolve into its name in a parsed string. A variable may be further encased in curly brackets to better indicate inline parsing:
+All variable references are possible to resolve in parsed strings. A variable may be further encased in curly brackets to better indicate inline parsing:
 
 ```
 # var-name is "cat"
@@ -345,10 +348,19 @@ Namespaces can be children of other namespaces, but MUST NOT be children of modu
 A module MUST NOT deploy any elements without an `IMPORT` declaration. To access a module in the same file, the `IMPORT` keyword is used with the following syntax:
 
 ```
-IMPORT $module-name
+IMPORT $module-name arguments
 ```
 
-Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, named arguments are allowed, and variable inference is based on type.
+Supplied arguments are treated the same way as they would be on an element; arguments are implied to be sequential, named arguments are allowed, and variable inference is based on type. `INHERIT` will not be resolved from the import declaration, but instead independently, wherever the variable is placed in the module. The following example demonstrates this:
+
+```
+MODULE 'fancy-window' @alignment
+	top-left 500x500 'fancy' window
+		@alignment 90%xDYNAMIC rect
+IMPORT $fancy-window INHERIT	# The rect will now inherit from the window
+```
+
+Note that `INHERIT` is invalid for an element directly under a module, unless it is a template.
 
 To import a module from another file, the `IMPORT` keyword is used with the following syntax (extension is REQUIRED):
 
